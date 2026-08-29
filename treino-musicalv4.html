@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treino Musical - Fretboard Master</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --panel-bg: #16213e;
+            --primary: #0f3460;
+            --accent: #e94560;
+            --text: #e0e0e0;
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --fretboard-wood: #3e2723;
+            --fret-wire: #b0bec5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { margin-bottom: 20px; text-align: center; }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 950px;
+            width: 100%;
+        }
+
+        .tab-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+
+        .tab-btn.active, .tab-btn:hover { background-color: var(--accent); }
+
+        .game-panel {
+            display: none;
+            background-color: var(--panel-bg);
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 950px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .game-panel.active { display: block; }
+
+        .fretboard-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 20px 0;
+            padding: 15px 0;
+            position: relative;
+            -webkit-overflow-scrolling: touch; 
+        }
+
+        .fretboard-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        .fretboard-container::-webkit-scrollbar-thumb {
+            background-color: var(--primary);
+            border-radius: 10px;
+        }
+
+        .fretboard {
+            display: grid;
+            grid-template-rows: repeat(6, 35px); 
+            min-width: 1400px;
+            background-color: var(--fretboard-wood);
+            border-radius: 5px;
+            border: 2px solid #271c19;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .string { display: flex; position: relative; flex-direction: row-reverse; }
+
+        .string::before {
+            content: '';
+            position: absolute;
+            left: 0; right: 0; top: 50%;
+            background: linear-gradient(to bottom, #eee, #999);
+            z-index: 2;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.5);
+        }
+
+        .string:nth-child(1)::before { height: 4px; }
+        .string:nth-child(2)::before { height: 3.5px; }
+        .string:nth-child(3)::before { height: 3px; }
+        .string:nth-child(4)::before { height: 2px; }
+        .string:nth-child(5)::before { height: 1.5px; }
+        .string:nth-child(6)::before { height: 1px; }
+
+        .fret {
+            flex: 1;
+            border-left: 3px solid var(--fret-wire); 
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.1);
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .fret:hover { background: rgba(255, 255, 255, 0.1); }
+        .fret:first-child { border-left: 6px solid #e0e0e0; background: #111; }
+
+        .fret-dot {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background-color: #e0e0e0;
+            border-radius: 50%;
+            z-index: 1;
+            opacity: 0.8;
+            box-shadow: inset 0 -2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .note-marker {
+            width: 26px;
+            height: 26px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 0 8px rgba(0,0,0,0.8);
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .fret.selected .note-marker, 
+        .fret.blink .note-marker, 
+        .fret.force-show .note-marker,
+        .fret.clicked .note-marker {
+            display: flex;
+        }
+
+        .fret.selected .note-marker, .fret.force-show .note-marker { 
+            background-color: var(--primary); 
+            border: 2px solid white;
+        }
+
+        .fret.blink .note-marker {
+            background-color: #ffeb3b;
+            color: #000;
+        }
+
+        .fret.wrong-click .note-marker { background-color: var(--wrong); display: flex; }
+        .fret.correct-click .note-marker { background-color: var(--correct); display: flex; }
+
+        .feedback { font-size: 18px; font-weight: bold; min-height: 30px; margin: 15px 0; }
+        
+        button.action-btn {
+            background-color: var(--correct); color: white; border: none; padding: 10px 20px;
+            font-size: 16px; border-radius: 5px; cursor: pointer; margin: 5px; transition: 0.2s;
+        }
+        button.action-btn:hover { filter: brightness(1.1); }
+
+        select, input[type="checkbox"] { padding: 8px; font-size: 15px; margin: 5px; border-radius: 5px; max-width: 100%; box-sizing: border-box; }
+        
+        .sub-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
+        .sub-tab-btn { padding: 8px 12px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .sub-tab-btn.active { background: var(--accent); }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 1.4rem; }
+            h2 { font-size: 1.1rem; }
+            .tab-btn, .sub-tab-btn { flex: 1 1 40%; font-size: 12px; padding: 8px 4px; }
+            .game-panel { padding: 12px 8px; }
+            .fretboard { grid-template-rows: repeat(6, 30px); min-width: 650px; }
+            .note-marker { width: 22px; height: 22px; font-size: 11px; }
+            button.action-btn { width: 100%; display: block; margin: 5px 0; }
+        }
+
+        .fretboard.show-all-notes .fret .note-marker {
+            display: flex;
+            background-color: var(--primary);
+            border: 2px solid white;
+        }
+
+        #fretboard8 {
+            min-width: 1400px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎸 Fretboard Master</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('aba1')">1. Ache a Nota</button>
+        <button class="tab-btn" onclick="openTab('aba2')">2. Monte o Acorde</button>
+        <button class="tab-btn" onclick="openTab('aba3')">3. Intervalos</button>
+        <button class="tab-btn" onclick="openTab('aba4')">4. Graus da Nota</button>
+        <button class="tab-btn" onclick="openTab('aba5')">5. Função dos Graus</button>
+        <button class="tab-btn" onclick="openTab('aba6')">6. Acorde do Grau</button>
+        <button class="tab-btn" onclick="openTab('aba7')" style="background-color: #ff9800;">7. Pentatônicas</button>
+        <button class="tab-btn" onclick="openTab('aba8')" style="background-color: #9c27b0;">8. Tocar Livre</button>
+        <button class="tab-btn" onclick="openTab('aba9')" style="background-color: #00bcd4;">9. Formação</button>
+    </div>
+
+    <!-- ABA 1 -->
+    <div id="aba1" class="game-panel active">
+        <h2>Encontre TODAS as ocorrências da nota <span id="target-note" style="color: var(--accent); font-size: 1.4em;"></span> (Casas 0 a 11)</h2>
+        <p>Ache 1 nota em cada corda. Casa 12 é ignorada.</p>
+        <div class="fretboard-container"><div id="fretboard1" class="fretboard"></div></div>
+        <div id="feedback1" class="feedback"></div>
+        <button class="action-btn" onclick="gerarNovaNotaAba1()">Próxima Nota</button>
+    </div>
+
+    <!-- ABA 2 -->
+    <div id="aba2" class="game-panel">
+        <h2>Monte o acorde de <span id="target-chord" style="color: var(--accent); font-size: 1.4em;"></span></h2>
+        <div class="fretboard-container"><div id="fretboard2" class="fretboard"></div></div>
+        <div id="feedback2" class="feedback"></div>
+        <button class="action-btn" onclick="verificarAcorde()">Verificar Acorde</button>
+        <button class="action-btn" style="background-color: var(--primary);" onclick="gerarNovoAcorde()">Novo Acorde</button>
+    </div>
+
+    <!-- ABA 3 -->
+    <div id="aba3" class="game-panel">
+        <h2>Quais são os intervalos de <span id="target-interval-note" style="color: var(--accent); font-size: 1.4em;"></span>?</h2>
+        <label><input type="checkbox" id="use-sevenths" onchange="gerarPerguntaIntervalo()"> Ativar Sétima Maior (7M)</label>
+        <div class="interval-selectors" style="margin: 20px 0;">
+            <p>
+                <span>3M:</span> <select id="sel-3rd"></select> 
+                <span>5J:</span> <select id="sel-5th"></select> 
+                <span id="p-7th" style="display:none;">7M: <select id="sel-7th"></select></span>
+            </p>
+        </div>
+        <div id="feedback3" class="feedback"></div>
+        <button class="action-btn" onclick="verificarIntervalos()">Verificar</button>
+        <button class="action-btn" style="background-color: var(--primary);" onclick="gerarPerguntaIntervalo()">Nova Nota</button>
+    </div>
+
+    <!-- ABA 4 -->
+    <div id="aba4" class="game-panel">
+        <h2>Qual é o <span id="target-degree-num" style="color: var(--accent);"></span> grau da escala 
+            <select id="tipo-escala-aba4" onchange="gerarPerguntaGrau()">
+                <option value="maior">Maior</option>
+                <option value="menor">Menor Natural</option>
+            </select> de <span id="target-degree-note" style="color: var(--accent); font-size: 1.4em;"></span>?</h2>
+        <select id="sel-degree-ans" style="margin: 20px 0; font-size: 18px; padding: 10px;"></select>
+        <div id="feedback4" class="feedback"></div>
+        <button class="action-btn" onclick="verificarGrauNota()">Verificar</button>
+        <button class="action-btn" style="background-color: var(--primary);" onclick="gerarPerguntaGrau()">Novo Desafio</button>
+    </div>
+
+    <!-- ABA 5 -->
+    <div id="aba5" class="game-panel">
+        <h2>O que significa o <span id="target-function-degree" style="color: var(--accent); font-size: 1.4em;"></span> Grau na escala 
+            <select id="tipo-escala-aba5" onchange="gerarPerguntaFuncao()">
+                <option value="maior">Maior</option>
+                <option value="menor">Menor Natural</option>
+            </select>?</h2>
+        <select id="sel-function-ans" style="margin: 20px 0; font-size: 18px; padding: 10px;"></select>
+        <div id="feedback5" class="feedback"></div>
+        <button class="action-btn" onclick="verificarFuncao()">Verificar</button>
+        <button class="action-btn" style="background-color: var(--primary);" onclick="gerarPerguntaFuncao()">Nova Pergunta</button>
+    </div>
+
+    <!-- ABA 6 -->
+    <div id="aba6" class="game-panel">
+        <h2>No tom de <span id="target-key-aba6" style="color: var(--accent); font-size: 1.4em;"></span> 
+            <select id="tipo-escala-aba6" onchange="gerarPerguntaAcordeGrau()" style="font-weight: bold; color: var(--accent); background: transparent; border: 1px solid var(--accent); width: auto;">
+                <option value="maior">Maior</option>
+                <option value="menor">Menor Natural</option>
+            </select>
+        </h2>
+        <h3>Monte o acorde do <span id="target-degree-aba6" style="color: var(--accent); font-size: 1.4em;"></span> grau</h3>
+        <p>Selecione as notas do acorde gerado por esse grau.</p>
+        <div class="fretboard-container"><div id="fretboard6" class="fretboard"></div></div>
+        <div id="feedback6" class="feedback"></div>
+        <button class="action-btn" onclick="verificarAcordeDoGrau()">Verificar Acorde</button>
+        <button class="action-btn" style="background-color: var(--primary);" onclick="gerarPerguntaAcordeGrau()">Novo Desafio</button>
+    </div>
+
+    <!-- ABA 7 -->
+    <div id="aba7" class="game-panel">
+        <h2>Treino de Pentatônicas Menores</h2>
+        <div class="sub-tabs">
+            <button class="sub-tab-btn active" onclick="setPentaFase(1)">1. Montar Shape</button>
+            <button class="sub-tab-btn" onclick="setPentaFase(2)">2. Caça às Tônicas</button>
+            <button class="sub-tab-btn" onclick="setPentaFase(3)">3. O Intruso</button>
+            <button class="sub-tab-btn" onclick="setPentaFase(4)">4. Conexão de Shapes</button>
+        </div>
+        <p id="penta-instruction" style="font-weight: bold; color: #ffca28;"></p>
+        
+        <div class="fretboard-container" id="fretboard7-wrapper">
+            <div id="fretboard7" class="fretboard"></div>
+        </div>
+        <div id="feedback7" class="feedback"></div>
+        <button class="action-btn" id="btn-penta-start" onclick="iniciarPentaFase()">Iniciar / Novo Desafio</button>
+        <button class="action-btn" id="btn-penta-check" style="display:none; background-color: var(--correct);" onclick="verificarPentaFase1()">Verificar Shape</button>
+    </div>
+
+    <!-- ABA 8 -->
+    <div id="aba8" class="game-panel">
+        <h2>Tocar Livre</h2>
+        <p>Clique em qualquer casa para ouvir e selecionar. Botão direito (PC) ou segurar a casa (Celular) remove a nota.</p>
+        
+        <label style="display: block; margin-bottom: 15px; font-weight: bold; color: var(--accent);">
+            <input type="checkbox" id="mostrar-todas-notas" onchange="toggleTodasNotas()"> 
+            Mostrar todas as notas do braço
+        </label>
+
+        <div class="fretboard-container"><div id="fretboard8" class="fretboard"></div></div>
+        <div id="feedback8" class="feedback"></div>
+        <button class="action-btn" style="background-color: var(--accent);" onclick="limparTocarLivre()">Limpar Seleções</button>
+    </div>
+
+    <!-- ABA 9 -->
+    <div id="aba9" class="game-panel">
+        <h2>Quais notas formam a <span id="tipo-desafio-aba9" style="color: var(--accent);"></span> de <span id="alvo-aba9" style="color: var(--accent); font-size: 1.4em;"></span>?</h2>
+        <p>Selecione todas as notas corretas abaixo:</p>
+        
+        <div id="botoes-notas-aba9" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+        </div>
+        
+        <div id="feedback9" class="feedback"></div>
+        <button class="action-btn" onclick="verificarAba9()">Verificar Notas</button>
+        <button class="action-btn" style="background-color: var(--primary);" onclick="gerarDesafioAba9()">Novo Desafio</button>
+    </div>
+
+    <script>
+        const notasCromaticas = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const afinacaoInvertida = ['E', 'A', 'D', 'G', 'B', 'E'];
+        
+        const grausRomanos = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+        const escalaMaiorFormula = [0, 2, 4, 5, 7, 9, 11];
+        const escalaMenorFormula = [0, 2, 3, 5, 7, 8, 10];
+        
+        const funcoesMaior = ['Tônica', 'Supertônica', 'Mediante', 'Subdominante', 'Dominante', 'Superdominante', 'Sensível'];
+        const funcoesMenor = ['Tônica', 'Supertônica', 'Mediante', 'Subdominante', 'Dominante', 'Superdominante', 'Subtônica'];
+
+        const qualidadeGrausMaior = ['Maior', 'menor', 'menor', 'Maior', 'Maior', 'menor', 'diminuto'];
+        const qualidadeGrausMenor = ['menor', 'diminuto', 'Maior', 'menor', 'menor', 'Maior', 'Maior'];
+
+        let audioCtx = null;
+
+        function playNoteSound(stringIndex, fret) {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const baseFreqs = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63];
+                const freq = baseFreqs[stringIndex] * Math.pow(2, fret / 12);
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2);
+            } catch (e) {
+                console.log("Audio not allowed yet");
+            }
+        }
+
+        function getNotaAleatoria() { return notasCromaticas[Math.floor(Math.random() * notasCromaticas.length)]; }
+        function addSemitons(notaBase, semitons) {
+            let index = notasCromaticas.indexOf(notaBase);
+            return notasCromaticas[(index + semitons) % 12];
+        }
+        function preencherSelect(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Selecione...</option>';
+            let notasEmbaralhadas = [...notasCromaticas].sort(() => Math.random() - 0.5);
+            notasEmbaralhadas.forEach(n => { select.innerHTML += `<option value="${n}">${n}</option>`; });
+        }
+
+        function openTab(tabId) {
+            document.querySelectorAll('.game-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            if(tabId === 'aba7') resetPentaFase();
+        }
+
+        function criarBraco(containerId, isInteractive = false, onCustomClick = null, numCasas = 12) {
+            const fretboard = document.getElementById(containerId);
+            fretboard.innerHTML = '';
+            
+            afinacaoInvertida.forEach((notaCordaSolta, indexCorda) => {
+                const stringDiv = document.createElement('div');
+                stringDiv.className = 'string';
+                stringDiv.dataset.stringIndex = indexCorda; 
+                
+                for(let casa = 0; casa <= numCasas; casa++) {
+                    const notaAtual = addSemitons(notaCordaSolta, casa);
+                    const fretDiv = document.createElement('div');
+                    fretDiv.className = 'fret';
+                    fretDiv.dataset.nota = notaAtual;
+                    fretDiv.dataset.fret = casa;
+                    fretDiv.dataset.string = indexCorda;
+                    fretDiv.id = `${containerId}-s${indexCorda}-f${casa}`;
+                    
+                    if (indexCorda === 2 && [3, 5, 7, 9, 15, 17, 19, 21].includes(casa)) { 
+                        const dot = document.createElement('div');
+                        dot.className = 'fret-dot';
+                        dot.style.top = '100%';
+                        fretDiv.appendChild(dot);
+                    }
+
+                    if ([12, 24].includes(casa) && (indexCorda === 1 || indexCorda === 3)) {
+                        const dot = document.createElement('div');
+                        dot.className = 'fret-dot';
+                        dot.style.top = '100%';
+                        fretDiv.appendChild(dot);
+                    }
+
+                    const marker = document.createElement('div');
+                    marker.className = 'note-marker';
+                    marker.innerText = notaAtual;
+                    fretDiv.appendChild(marker);
+
+                    let touchTimer = null;
+                    let isLongPress = false;
+
+                    // Clique com o botão direito (Desktop)
+                    fretDiv.oncontextmenu = function(e) {
+                        e.preventDefault();
+                        if (containerId === 'fretboard8') {
+                            this.classList.remove('clicked', 'selected');
+                        }
+                    };
+
+                    // Segurar a casa (Celular)
+                    fretDiv.addEventListener('touchstart', function(e) {
+                        isLongPress = false;
+                        touchTimer = setTimeout(() => {
+                            isLongPress = true;
+                            if (containerId === 'fretboard8') {
+                                this.classList.remove('clicked', 'selected');
+                            }
+                        }, 500);
+                    }, { passive: true });
+
+                    fretDiv.addEventListener('touchend', function() {
+                        if (touchTimer) clearTimeout(touchTimer);
+                    });
+
+                    fretDiv.addEventListener('touchmove', function() {
+                        if (touchTimer) clearTimeout(touchTimer);
+                    });
+
+                    fretDiv.onclick = function() {
+                        if (isLongPress) {
+                            isLongPress = false;
+                            return;
+                        }
+                        playNoteSound(indexCorda, casa);
+                        if(onCustomClick) {
+                            onCustomClick(this);
+                        } else if(isInteractive) {
+                            this.classList.add('clicked');
+                            this.classList.toggle('selected');
+                        }
+                    };
+
+                    stringDiv.appendChild(fretDiv);
+                }
+                fretboard.appendChild(stringDiv);
+            });
+        }
+
+        /* ABA 1 */
+        let notaAlvoAba1 = '';
+        let acertosAba1 = new Set();
+
+        function gerarNovaNotaAba1() {
+            notaAlvoAba1 = getNotaAleatoria(); 
+            acertosAba1.clear();
+            document.getElementById('target-note').innerText = notaAlvoAba1;
+            document.getElementById('feedback1').innerText = 'Encontre a nota ' + notaAlvoAba1 + ' nas 6 cordas (0 a 11). Progresso: 0/6';
+            
+            criarBraco('fretboard1', false, (fretEl) => {
+                const casa = parseInt(fretEl.dataset.fret);
+                const corda = parseInt(fretEl.dataset.string);
+                const nota = fretEl.dataset.nota;
+                const fb = document.getElementById('feedback1');
+
+                if (casa === 12) {
+                    fb.style.color = 'yellow';
+                    fb.innerText = 'A casa 12 é equivalente à casa 0 (corda solta) e foi ignorada no desafio!';
+                    return;
+                }
+
+                if (nota === notaAlvoAba1) {
+                    if (!acertosAba1.has(corda)) {
+                        acertosAba1.add(corda);
+                        fretEl.classList.add('correct-click', 'clicked');
+                        fb.style.color = 'var(--correct)';
+                        fb.innerText = `Certo! Nota ${notaAlvoAba1} na corda ${corda + 1}. Progresso: ${acertosAba1.size}/6`;
+                        if (acertosAba1.size === 6) {
+                            fb.innerText = `Parabéns! Você encontrou todas as 6 notas ${notaAlvoAba1}! 🎉`;
+                        }
+                    }
+                } else {
+                    fretEl.classList.add('wrong-click', 'clicked');
+                    fb.style.color = 'var(--wrong)';
+                    fb.innerText = `Ops, a casa ${casa} na corda ${corda + 1} é ${nota}. Tente encontrar a nota ${notaAlvoAba1}.`;
+                }
+            });
+        }
+
+        /* ABA 2 */
+        let acordeAlvoBase = '', tipoAcordeAba2 = '', notasDoAcordeAba2 = [];
+        function gerarNovoAcorde() {
+            acordeAlvoBase = getNotaAleatoria(); 
+            tipoAcordeAba2 = Math.random() > 0.5 ? 'Maior' : 'Menor';
+            document.getElementById('target-chord').innerText = `${acordeAlvoBase} ${tipoAcordeAba2}`;
+            document.getElementById('feedback2').innerText = '';
+            
+            let t3 = tipoAcordeAba2 === 'Maior' ? 4 : 3;
+            notasDoAcordeAba2 = [acordeAlvoBase, addSemitons(acordeAlvoBase, t3), addSemitons(acordeAlvoBase, 7)];
+            document.querySelectorAll('#fretboard2 .fret').forEach(f => f.classList.remove('selected', 'clicked'));
+        }
+
+        function verificarAcorde() {
+            const selecionadas = Array.from(document.querySelectorAll('#fretboard2 .fret.selected')).map(f => f.dataset.nota);
+            const notasUnicas = [...new Set(selecionadas)];
+            const acertou = notasDoAcordeAba2.every(n => notasUnicas.includes(n)) && notasUnicas.every(n => notasDoAcordeAba2.includes(n));
+            const fb = document.getElementById('feedback2');
+            if(selecionadas.length < 3) { fb.style.color = 'yellow'; fb.innerText = 'Selecione pelo menos 3 notas!'; }
+            else if(acertou) { fb.style.color = 'var(--correct)'; fb.innerText = 'Acorde Perfeito! 🤘'; }
+            else { fb.style.color = 'var(--wrong)'; fb.innerText = `Erro! As notas do acorde são: ${notasDoAcordeAba2.join(', ')}.`; }
+        }
+
+        /* ABA 3 */
+        let notaIntervaloAlvo = '';
+        function gerarPerguntaIntervalo() {
+            notaIntervaloAlvo = getNotaAleatoria(); document.getElementById('target-interval-note').innerText = notaIntervaloAlvo;
+            document.getElementById('feedback3').innerText = ''; ['sel-3rd', 'sel-5th', 'sel-7th'].forEach(id => document.getElementById(id).value = '');
+            const usa7a = document.getElementById('use-sevenths').checked; document.getElementById('p-7th').style.display = usa7a ? 'inline' : 'none';
+        }
+        function verificarIntervalos() {
+            const t3=addSemitons(notaIntervaloAlvo,4), t5=addSemitons(notaIntervaloAlvo,7), t7=addSemitons(notaIntervaloAlvo,11);
+            const r3=document.getElementById('sel-3rd').value, r5=document.getElementById('sel-5th').value, r7=document.getElementById('sel-7th').value;
+            const usa7a = document.getElementById('use-sevenths').checked;
+            let ok = (r3 === t3 && r5 === t5); if(usa7a) ok = ok && (r7 === t7);
+            const fb = document.getElementById('feedback3');
+            if(ok) { fb.style.color='var(--correct)'; fb.innerText='Na mosca! 🎯'; } else { fb.style.color='var(--wrong)'; fb.innerText='Incorreto!'; }
+        }
+
+        /* ABA 4 */
+        let notaGrau='', numGrau=0, notaCorretaGrau='';
+        function gerarPerguntaGrau() {
+            notaGrau = getNotaAleatoria(); 
+            numGrau = Math.floor(Math.random() * 7);
+            let isMenor = document.getElementById('tipo-escala-aba4').value === 'menor';
+            
+            document.getElementById('target-degree-note').innerText = notaGrau; 
+            document.getElementById('target-degree-num').innerText = (numGrau + 1) + 'º';
+            
+            let formula = isMenor ? escalaMenorFormula : escalaMaiorFormula;
+            notaCorretaGrau = addSemitons(notaGrau, formula[numGrau]);
+            document.getElementById('sel-degree-ans').value = ''; document.getElementById('feedback4').innerText = '';
+        }
+        function verificarGrauNota() {
+            const resp = document.getElementById('sel-degree-ans').value; const fb = document.getElementById('feedback4');
+            if(resp === notaCorretaGrau) { fb.style.color='var(--correct)'; fb.innerText='Correto!'; } else { fb.style.color='var(--wrong)'; fb.innerText=`Incorreto. A resposta é ${notaCorretaGrau}.`; }
+        }
+
+        /* ABA 5 */
+        let grauAtualIndex=0;
+        function gerarPerguntaFuncao() {
+            grauAtualIndex = Math.floor(Math.random() * 7); 
+            document.getElementById('target-function-degree').innerText = grausRomanos[grauAtualIndex];
+            
+            let isMenor = document.getElementById('tipo-escala-aba5').value === 'menor';
+            let listaFuncoes = isMenor ? funcoesMenor : funcoesMaior;
+            
+            let select = document.getElementById('sel-function-ans');
+            select.innerHTML = '<option value="">Selecione...</option>';
+            [...new Set([...funcoesMaior, ...funcoesMenor])].forEach(f => {
+                select.innerHTML += `<option value="${f}">${f}</option>`;
+            });
+
+            document.getElementById('feedback5').innerText = '';
+        }
+        function verificarFuncao() {
+            let isMenor = document.getElementById('tipo-escala-aba5').value === 'menor';
+            let respostaCorreta = isMenor ? funcoesMenor[grauAtualIndex] : funcoesMaior[grauAtualIndex];
+            const resp = document.getElementById('sel-function-ans').value; const fb = document.getElementById('feedback5');
+            if(resp === respostaCorreta) { fb.style.color='var(--correct)'; fb.innerText='Perfeito!'; } else { fb.style.color='var(--wrong)'; fb.innerText=`Incorreto. A função é ${respostaCorreta}.`; }
+        }
+
+        /* ABA 6 */
+        let tomAba6='', grauAlvoAba6=0, notasDoAcordeAba6=[], nomeAcordeEsperadoAba6='';
+        function gerarPerguntaAcordeGrau() {
+            tomAba6 = getNotaAleatoria();
+            grauAlvoAba6 = Math.floor(Math.random() * 7);
+            let isMenor = document.getElementById('tipo-escala-aba6').value === 'menor';
+            
+            document.getElementById('target-key-aba6').innerText = tomAba6;
+            document.getElementById('target-degree-aba6').innerText = grausRomanos[grauAlvoAba6];
+            document.getElementById('feedback6').innerText = '';
+            document.querySelectorAll('#fretboard6 .fret').forEach(f => f.classList.remove('selected', 'clicked'));
+
+            let formulaUsada = isMenor ? escalaMenorFormula : escalaMaiorFormula;
+            let qualidadeUsada = isMenor ? qualidadeGrausMenor : qualidadeGrausMaior;
+
+            let tonicaAcorde = addSemitons(tomAba6, formulaUsada[grauAlvoAba6]);
+            let qualidade = qualidadeUsada[grauAlvoAba6];
+            nomeAcordeEsperadoAba6 = tonicaAcorde + (qualidade === 'Maior' ? '' : (qualidade === 'menor' ? 'm' : 'dim'));
+
+            let t3 = 0, t5 = 0;
+            if (qualidade === 'Maior') { t3 = 4; t5 = 7; }
+            else if (qualidade === 'menor') { t3 = 3; t5 = 7; }
+            else if (qualidade === 'diminuto') { t3 = 3; t5 = 6; }
+
+            notasDoAcordeAba6 = [tonicaAcorde, addSemitons(tonicaAcorde, t3), addSemitons(tonicaAcorde, t5)];
+        }
+
+        function verificarAcordeDoGrau() {
+            const selecionadas = Array.from(document.querySelectorAll('#fretboard6 .fret.selected')).map(f => f.dataset.nota);
+            const notasUnicas = [...new Set(selecionadas)];
+            const acertou = notasDoAcordeAba6.every(n => notasUnicas.includes(n)) && notasUnicas.every(n => notasDoAcordeAba6.includes(n));
+            const fb = document.getElementById('feedback6');
+            
+            if(selecionadas.length < 3) { fb.style.color = 'yellow'; fb.innerText = 'Selecione pelo menos 3 notas!'; }
+            else if(acertou) { fb.style.color = 'var(--correct)'; fb.innerHTML = `Genial! Acorde: <b>${nomeAcordeEsperadoAba6}</b>.`; }
+            else { fb.style.color = 'var(--wrong)'; fb.innerHTML = `O acorde é <b>${nomeAcordeEsperadoAba6}</b>. Notas: ${notasDoAcordeAba6.join(', ')}.`; }
+        }
+
+        /* ABA 7 */
+        let pentaFaseAtual = 1;
+        let pentaTonicaAtual = 'A';
+        let pentaShapeAtualNum = 1;
+        let pIntrusoState = { wrongId: '', correctId: '', clickedWrong: false };
+
+        function getShapePositions(tonica, shapeNum) {
+            let baseFret = (notasCromaticas.indexOf(tonica) - notasCromaticas.indexOf('E') + 12) % 12;
+            let offsets = [0, 3, 5, 7, 10];
+            let relativePatterns = {
+                1: [ [0,3], [0,2], [0,2], [0,2], [0,3], [0,3] ],
+                2: [ [3,5], [2,5], [2,5], [2,4], [3,5], [3,5] ],
+                3: [ [5,7], [5,7], [5,7], [4,7], [5,8], [5,7] ],
+                4: [ [7,10], [7,10], [7,9], [7,9], [8,10], [7,10] ],
+                5: [ [10,12], [10,12], [9,12], [9,12], [10,13], [10,12] ]
+            };
+
+            let pattern = relativePatterns[shapeNum];
+            let positions = [];
+
+            pattern.forEach((pair, corda) => {
+                pair.forEach(relFret => {
+                    let actualFret = (baseFret + relFret) % 12;
+                    positions.push({ s: corda, f: actualFret });
+                });
+            });
+
+            return positions;
+        }
+
+        function setPentaFase(fase) {
+            pentaFaseAtual = fase;
+            document.querySelectorAll('#aba7 .sub-tab-btn').forEach((b, idx) => {
+                b.classList.toggle('active', idx === fase - 1);
+            });
+            resetPentaFase();
+        }
+
+        function resetPentaFase() {
+            const fb = document.getElementById('feedback7');
+            fb.innerText = '';
+            document.getElementById('btn-penta-check').style.display = 'none';
+            document.getElementById('btn-penta-start').style.display = 'inline-block';
+            
+            const instrucoes = [
+                "1. Montar Shape: Monte o Shape pedido selecionando todas as casas dele.",
+                "2. Caça às Tônicas: Clique em TODAS as Tônicas espalhadas por todo o braço (0-11).",
+                "3. O Intruso: Identifique a nota errada e depois clique no local correto dela.",
+                "4. Conexão: Complete a transição entre o final de um shape e o início do próximo."
+            ];
+            document.getElementById('penta-instruction').innerText = instrucoes[pentaFaseAtual - 1];
+
+            criarBraco('fretboard7', true);
+        }
+
+        function iniciarPentaFase() {
+            pentaTonicaAtual = getNotaAleatoria();
+            pentaShapeAtualNum = Math.floor(Math.random() * 5) + 1;
+            const fb = document.getElementById('feedback7');
+            fb.innerText = '';
+
+            if (pentaFaseAtual === 1) {
+                document.getElementById('penta-instruction').innerText = `Monte o Shape ${pentaShapeAtualNum} da Pentatônica Menor de ${pentaTonicaAtual}`;
+                document.getElementById('btn-penta-check').style.display = 'inline-block';
+                criarBraco('fretboard7', true);
+            } 
+            else if (pentaFaseAtual === 2) {
+                document.getElementById('penta-instruction').innerText = `Encontre TODAS as Tônicas (${pentaTonicaAtual}) em todas as cordas (Casas 0 a 11)!`;
+                let encontradas = 0;
+                criarBraco('fretboard7', false, (fretEl) => {
+                    const corda = parseInt(fretEl.dataset.string);
+                    const casa = parseInt(fretEl.dataset.fret);
+                    if (casa === 12) return;
+                    
+                    if (fretEl.dataset.nota === pentaTonicaAtual) {
+                        if (!fretEl.classList.contains('correct-click')) {
+                            fretEl.classList.add('correct-click', 'clicked');
+                            encontradas++;
+                            fb.style.color = 'var(--correct)';
+                            fb.innerText = `Achou Tônica ${pentaTonicaAtual}! (${encontradas}/6)`;
+                            if (encontradas === 6) fb.innerText = `Excelente! Você localizou todas as Tônicas de ${pentaTonicaAtual}! 🎯`;
+                        }
+                    } else {
+                        fretEl.classList.add('wrong-click', 'clicked');
+                        fb.style.color = 'var(--wrong)';
+                        fb.innerText = `Não é Tônica! A nota aí é ${fretEl.dataset.nota}.`;
+                    }
+                });
+            }
+            else if (pentaFaseAtual === 3) {
+                let targetPositions = getShapePositions(pentaTonicaAtual, pentaShapeAtualNum);
+                let idxIntruso = Math.floor(Math.random() * targetPositions.length);
+                let posOriginal = targetPositions[idxIntruso];
+                let fretDeslocado = (posOriginal.f + (Math.random() > 0.5 ? 1 : 11)) % 12;
+
+                pIntrusoState.wrongId = `fretboard7-s${posOriginal.s}-f${fretDeslocado}`;
+                pIntrusoState.correctId = `fretboard7-s${posOriginal.s}-f${posOriginal.f}`;
+                pIntrusoState.clickedWrong = false;
+
+                document.getElementById('penta-instruction').innerText = `Shape ${pentaShapeAtualNum} de ${pentaTonicaAtual}m exibido. Clique na nota INTRUSA (fora de lugar)!`;
+
+                criarBraco('fretboard7', false, (fretEl) => {
+                    if (!pIntrusoState.clickedWrong) {
+                        if (fretEl.id === pIntrusoState.wrongId) {
+                            fretEl.classList.add('wrong-click', 'clicked');
+                            pIntrusoState.clickedWrong = true;
+                            fb.style.color = 'var(--correct)';
+                            fb.innerText = 'Boa! Você pegou o Intruso. Agora clique na casa CORRETA onde essa nota deveria estar!';
+                        } else {
+                            fb.style.color = 'var(--wrong)';
+                            fb.innerText = 'Essa nota faz parte do Shape correto. Procure o intruso!';
+                        }
+                    } else {
+                        if (fretEl.id === pIntrusoState.correctId) {
+                            fretEl.classList.add('correct-click', 'clicked');
+                            fb.style.color = 'var(--correct)';
+                            fb.innerText = 'Perfeito! Você identificou o erro e corrigiu a posição!';
+                        } else {
+                            fb.style.color = 'var(--wrong)';
+                            fb.innerText = 'Lugar incorreto. Tente clicar na posição original correta!';
+                        }
+                    }
+                });
+
+                targetPositions.forEach((pos, i) => {
+                    let fretId = (i === idxIntruso) ? pIntrusoState.wrongId : `fretboard7-s${pos.s}-f${pos.f}`;
+                    let f = document.getElementById(fretId);
+                    if (f) f.classList.add('force-show');
+                });
+            }
+            else if (pentaFaseAtual === 4) {
+                let proximoShape = (pentaShapeAtualNum % 5) + 1;
+                document.getElementById('penta-instruction').innerText = `Transição: Conecte o final do Shape ${pentaShapeAtualNum} ao início do Shape ${proximoShape} (${pentaTonicaAtual}m).`;
+                
+                let shape1Pos = getShapePositions(pentaTonicaAtual, pentaShapeAtualNum);
+                let shape2Pos = getShapePositions(pentaTonicaAtual, proximoShape);
+
+                shape1Pos.forEach(pos => {
+                    let f = document.getElementById(`fretboard7-s${pos.s}-f${pos.f}`);
+                    if(f) f.classList.add('force-show');
+                });
+
+                fb.innerText = `Selecione as notas do Shape ${proximoShape} na 6ª corda para fazer a conexão!`;
+                
+                let conectouCount = 0;
+                let target2Frets = shape2Pos.filter(p => p.s === 0).map(p => p.f);
+
+                criarBraco('fretboard7', false, (fretEl) => {
+                    const corda = parseInt(fretEl.dataset.string);
+                    const casa = parseInt(fretEl.dataset.fret);
+
+                    if (corda === 0 && target2Frets.includes(casa)) {
+                        if(!fretEl.classList.contains('correct-click')) {
+                            fretEl.classList.add('correct-click', 'clicked');
+                            conectouCount++;
+                            if(conectouCount >= target2Frets.length) {
+                                fb.style.color = 'var(--correct)';
+                                fb.innerText = `Conexão efetuada com sucesso do Shape ${pentaShapeAtualNum} para o Shape ${proximoShape}! 🎸`;
+                            }
+                        }
+                    } else {
+                        fretEl.classList.add('wrong-click', 'clicked');
+                        fb.style.color = 'var(--wrong)';
+                        fb.innerText = 'Fora da conexão! Clique nas notas de conexão na 6ª corda.';
+                    }
+                });
+                
+                shape1Pos.forEach(pos => {
+                    let f = document.getElementById(`fretboard7-s${pos.s}-f${pos.f}`);
+                    if(f) f.classList.add('force-show');
+                });
+            }
+        }
+
+        function verificarPentaFase1() {
+            let esperadas = getShapePositions(pentaTonicaAtual, pentaShapeAtualNum);
+            let selecionadas = Array.from(document.querySelectorAll('#fretboard7 .fret.selected')).map(f => ({
+                s: parseInt(f.dataset.string),
+                f: parseInt(f.dataset.fret)
+            }));
+
+            let acertou = esperadas.every(e => selecionadas.some(s => s.s === e.s && s.f === e.f)) &&
+                          selecionadas.every(s => esperadas.some(e => e.s === s.s && e.f === s.f));
+
+            const fb = document.getElementById('feedback7');
+            if (acertou) {
+                fb.style.color = 'var(--correct)';
+                fb.innerText = `Perfeito! Você montou corretamente o Shape ${pentaShapeAtualNum} de ${pentaTonicaAtual}m! 🔥`;
+            } else {
+                fb.style.color = 'var(--wrong)';
+                fb.innerText = 'Shape incompleto ou com notas fora do desenho correto. Tente novamente!';
+            }
+        }
+
+        window.onload = () => {
+            criarBraco('fretboard1', false, null, 24); 
+            criarBraco('fretboard2', true, null, 24);
+            criarBraco('fretboard6', true, null, 24); 
+            criarBraco('fretboard7', true, null, 24);
+            
+            // Aba 8: Tocar Livre com clique normal, botão direito e segurar
+            criarBraco('fretboard8', false, (fretEl) => {
+                fretEl.classList.add('clicked', 'selected');
+                document.getElementById('feedback8').innerText = `Nota: ${fretEl.dataset.nota} | Corda: ${parseInt(fretEl.dataset.string)+1} | Casa: ${fretEl.dataset.fret}`;
+            }, 24);
+
+            preencherSelect('sel-3rd'); preencherSelect('sel-5th'); preencherSelect('sel-7th'); preencherSelect('sel-degree-ans');
+            
+            gerarNovaNotaAba1(); 
+            gerarNovoAcorde(); 
+            gerarPerguntaIntervalo(); 
+            gerarPerguntaGrau(); 
+            gerarPerguntaFuncao(); 
+            gerarPerguntaAcordeGrau();
+            setPentaFase(1);
+            gerarDesafioAba9(); 
+        };
+
+        /* ABA 9 */
+        let notasCorretasAba9 = [];
+        let notasSelecionadasAba9 = new Set();
+
+        function gerarDesafioAba9() {
+            const tom = getNotaAleatoria();
+            const ehEscala = Math.random() > 0.5;
+
+            document.getElementById('alvo-aba9').innerText = tom;
+            document.getElementById('tipo-desafio-aba9').innerText = ehEscala ? "Escala Maior" : "Tríade Maior (Acorde)";
+
+            notasCorretasAba9 = [];
+            const formula = ehEscala ? escalaMaiorFormula : [0, 4, 7]; 
+
+            formula.forEach(intervalo => {
+                notasCorretasAba9.push(addSemitons(tom, intervalo));
+            });
+
+            notasSelecionadasAba9.clear();
+            document.getElementById('feedback9').innerText = '';
+            
+            const container = document.getElementById('botoes-notas-aba9');
+            container.innerHTML = '';
+            
+            let notasEmbaralhadas = [...notasCromaticas].sort(() => Math.random() - 0.5);
+            
+            notasEmbaralhadas.forEach(nota => {
+                const btn = document.createElement('button');
+                btn.innerText = nota;
+                btn.className = 'sub-tab-btn';
+                btn.style.fontSize = '16px';
+                btn.style.minWidth = '45px';
+                
+                btn.onclick = () => {
+                    if(notasSelecionadasAba9.has(nota)) {
+                        notasSelecionadasAba9.delete(nota);
+                        btn.classList.remove('active');
+                    } else {
+                        notasSelecionadasAba9.add(nota);
+                        btn.classList.add('active');
+                    }
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function verificarAba9() {
+            const fb = document.getElementById('feedback9');
+            const selecionadas = Array.from(notasSelecionadasAba9);
+            
+            const acertou = notasCorretasAba9.length === selecionadas.length && 
+                            notasCorretasAba9.every(n => selecionadas.includes(n));
+
+            if(selecionadas.length === 0) {
+                fb.style.color = 'yellow';
+                fb.innerText = 'Selecione pelo menos uma nota!';
+            } else if(acertou) {
+                fb.style.color = 'var(--correct)';
+                fb.innerText = 'Perfeito! Você acertou todas as notas da formação! 🎸';
+            } else {
+                fb.style.color = 'var(--wrong)';
+                fb.innerText = `Ops! As notas corretas são: ${notasCorretasAba9.join(', ')}.`;
+            }
+        }
+
+        function limparTocarLivre() {
+            document.querySelectorAll('#fretboard8 .fret').forEach(fret => {
+                fret.classList.remove('selected', 'clicked');
+            });
+            document.getElementById('feedback8').innerText = '';
+        }
+
+        function toggleTodasNotas() {
+            const fb = document.getElementById('fretboard8');
+            const checkbox = document.getElementById('mostrar-todas-notas');
+            if (checkbox.checked) {
+                fb.classList.add('show-all-notes');
+            } else {
+                fb.classList.remove('show-all-notes');
+            }
+        }
+    </script>
+</body>
+</html>
