@@ -231,6 +231,7 @@
         <button class="tab-btn" onclick="openTab('aba7')" style="background-color: #ff9800;">7. Pentatônicas</button>
         <button class="tab-btn" onclick="openTab('aba8')" style="background-color: #9c27b0;">8. Tocar Livre</button>
         <button class="tab-btn" onclick="openTab('aba9')" style="background-color: #00bcd4;">9. Formação</button>
+        <button class="tab-btn" onclick="openTab('aba10')" style="background-color: #4caf50;">10. Qual é a Nota?</button>
     </div>
 
     <!-- ABA 1 -->
@@ -354,6 +355,19 @@
         <div id="feedback9" class="feedback"></div>
         <button class="action-btn" onclick="verificarAba9()">Verificar Notas</button>
         <button class="action-btn" style="background-color: var(--primary);" onclick="gerarDesafioAba9()">Novo Desafio</button>
+    </div>
+
+    <div id="aba10" class="game-panel">
+        <h2>Qual é a nota destacada no braço?</h2>
+        <p>Observe a marcação piscando no braço e selecione a nota correspondente abaixo:</p>
+        
+        <div class="fretboard-container"><div id="fretboard10" class="fretboard"></div></div>
+        
+        <div id="botoes-notas-aba10" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+            </div>
+        
+        <div id="feedback10" class="feedback"></div>
+        <button class="action-btn" style="background-color: var(--primary);" onclick="gerarDesafioAba10()">Novo Desafio</button>
     </div>
 
     <script>
@@ -863,13 +877,69 @@
             }
         }
 
+        /* ABA 10 - QUAL É A NOTA */
+        let notaCorretaAba10 = '';
+        let fretDestacadoAba10 = null;
+
+        function inicializarBotoesAba10() {
+            const container = document.getElementById('botoes-notas-aba10');
+            container.innerHTML = '';
+            notasCromaticas.forEach(nota => {
+                const btn = document.createElement('button');
+                btn.innerText = nota;
+                btn.className = 'sub-tab-btn';
+                btn.style.fontSize = '16px';
+                btn.style.minWidth = '45px';
+                btn.onclick = () => verificarNotaAba10(nota);
+                container.appendChild(btn);
+            });
+        }
+
+        function gerarDesafioAba10() {
+            document.querySelectorAll('#fretboard10 .fret').forEach(f => {
+                f.classList.remove('force-show', 'blink', 'correct-click', 'wrong-click');
+                // Esconde a nota para o desafio
+                f.querySelector('.note-marker').innerText = '?';
+            });
+            document.getElementById('feedback10').innerText = '';
+
+            const corda = Math.floor(Math.random() * 6);
+            const casa = Math.floor(Math.random() * 12); // Limitado a 12 para treino inicial
+
+            const idStr = `fretboard10-s${corda}-f${casa}`;
+            fretDestacadoAba10 = document.getElementById(idStr);
+            
+            if (fretDestacadoAba10) {
+                fretDestacadoAba10.classList.add('force-show', 'blink');
+                notaCorretaAba10 = fretDestacadoAba10.dataset.nota;
+            }
+        }
+
+        function verificarNotaAba10(notaEscolhida) {
+            const fb = document.getElementById('feedback10');
+            if (notaEscolhida === notaCorretaAba10) {
+                fb.style.color = 'var(--correct)';
+                fb.innerText = `Correto! A nota é ${notaCorretaAba10}.`;
+                fretDestacadoAba10.classList.remove('blink');
+                fretDestacadoAba10.classList.add('correct-click');
+                fretDestacadoAba10.querySelector('.note-marker').innerText = notaCorretaAba10;
+            } else {
+                fb.style.color = 'var(--wrong)';
+                fb.innerText = `Incorreto! A nota não é ${notaEscolhida}. Tente novamente.`;
+            }
+        }
+
         window.onload = () => {
             criarBraco('fretboard1', false, null, 24); 
             criarBraco('fretboard2', true, null, 24);
             criarBraco('fretboard6', true, null, 24); 
             criarBraco('fretboard7', true, null, 24);
             
-            // Aba 8: Tocar Livre com clique normal, botão direito e segurar
+            /* Adicione estas duas linhas para a ABA 10 */
+            criarBraco('fretboard10', false, null, 24);
+            inicializarBotoesAba10();
+            /* -------------------------------------- */
+
             criarBraco('fretboard8', false, (fretEl) => {
                 fretEl.classList.add('clicked', 'selected');
                 document.getElementById('feedback8').innerText = `Nota: ${fretEl.dataset.nota} | Corda: ${parseInt(fretEl.dataset.string)+1} | Casa: ${fretEl.dataset.fret}`;
@@ -884,7 +954,10 @@
             gerarPerguntaFuncao(); 
             gerarPerguntaAcordeGrau();
             setPentaFase(1);
-            gerarDesafioAba9(); 
+            gerarDesafioAba9();
+            
+            /* Adicione esta linha para gerar o primeiro desafio da ABA 10 */
+            gerarDesafioAba10();
         };
 
         /* ABA 9 */
