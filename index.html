@@ -232,9 +232,9 @@
         <button class="tab-btn" onclick="openTab('aba8')" style="background-color: #9c27b0;">8. Tocar Livre</button>
         <button class="tab-btn" onclick="openTab('aba9')" style="background-color: #00bcd4;">9. Formação</button>
         <button class="tab-btn" onclick="openTab('aba10')" style="background-color: #4caf50;">10. Qual é a Nota?</button>
+        <button class="tab-btn" onclick="openTab('aba11')" style="background-color: #e91e63;">11. Graus na Penta</button>
     </div>
 
-    <!-- ABA 1 -->
     <div id="aba1" class="game-panel active">
         <h2>Encontre TODAS as ocorrências da nota <span id="target-note" style="color: var(--accent); font-size: 1.4em;"></span> (Casas 0 a 11)</h2>
         <p>Ache 1 nota em cada corda. Casa 12 é ignorada.</p>
@@ -243,7 +243,6 @@
         <button class="action-btn" onclick="gerarNovaNotaAba1()">Próxima Nota</button>
     </div>
 
-    <!-- ABA 2 -->
     <div id="aba2" class="game-panel">
         <h2>Monte o acorde de <span id="target-chord" style="color: var(--accent); font-size: 1.4em;"></span></h2>
         <div class="fretboard-container"><div id="fretboard2" class="fretboard"></div></div>
@@ -252,7 +251,6 @@
         <button class="action-btn" style="background-color: var(--primary);" onclick="gerarNovoAcorde()">Novo Acorde</button>
     </div>
 
-    <!-- ABA 3 -->
     <div id="aba3" class="game-panel">
         <h2>Quais são os intervalos de <span id="target-interval-note" style="color: var(--accent); font-size: 1.4em;"></span>?</h2>
         <label><input type="checkbox" id="use-sevenths" onchange="gerarPerguntaIntervalo()"> Ativar Sétima Maior (7M)</label>
@@ -268,7 +266,6 @@
         <button class="action-btn" style="background-color: var(--primary);" onclick="gerarPerguntaIntervalo()">Nova Nota</button>
     </div>
 
-    <!-- ABA 4 -->
     <div id="aba4" class="game-panel">
         <h2>Qual é o <span id="target-degree-num" style="color: var(--accent);"></span> grau da escala 
             <select id="tipo-escala-aba4" onchange="gerarPerguntaGrau()">
@@ -281,7 +278,6 @@
         <button class="action-btn" style="background-color: var(--primary);" onclick="gerarPerguntaGrau()">Novo Desafio</button>
     </div>
 
-    <!-- ABA 5 -->
     <div id="aba5" class="game-panel">
         <h2>O que significa o <span id="target-function-degree" style="color: var(--accent); font-size: 1.4em;"></span> Grau na escala 
             <select id="tipo-escala-aba5" onchange="gerarPerguntaFuncao()">
@@ -294,7 +290,6 @@
         <button class="action-btn" style="background-color: var(--primary);" onclick="gerarPerguntaFuncao()">Nova Pergunta</button>
     </div>
 
-    <!-- ABA 6 -->
     <div id="aba6" class="game-panel">
         <h2>No tom de <span id="target-key-aba6" style="color: var(--accent); font-size: 1.4em;"></span> 
             <select id="tipo-escala-aba6" onchange="gerarPerguntaAcordeGrau()" style="font-weight: bold; color: var(--accent); background: transparent; border: 1px solid var(--accent); width: auto;">
@@ -310,7 +305,6 @@
         <button class="action-btn" style="background-color: var(--primary);" onclick="gerarPerguntaAcordeGrau()">Novo Desafio</button>
     </div>
 
-    <!-- ABA 7 -->
     <div id="aba7" class="game-panel">
         <h2>Treino de Pentatônicas Menores</h2>
         <div class="sub-tabs">
@@ -329,7 +323,6 @@
         <button class="action-btn" id="btn-penta-check" style="display:none; background-color: var(--correct);" onclick="verificarPentaFase1()">Verificar Shape</button>
     </div>
 
-    <!-- ABA 8 -->
     <div id="aba8" class="game-panel">
         <h2>Tocar Livre</h2>
         <p>Clique em qualquer casa para ouvir e selecionar. Botão direito (PC) ou segurar a casa (Celular) remove a nota.</p>
@@ -344,7 +337,6 @@
         <button class="action-btn" style="background-color: var(--accent);" onclick="limparTocarLivre()">Limpar Seleções</button>
     </div>
 
-    <!-- ABA 9 -->
     <div id="aba9" class="game-panel">
         <h2>Quais notas formam a <span id="tipo-desafio-aba9" style="color: var(--accent);"></span> de <span id="alvo-aba9" style="color: var(--accent); font-size: 1.4em;"></span>?</h2>
         <p>Selecione todas as notas corretas abaixo:</p>
@@ -368,6 +360,16 @@
         
         <div id="feedback10" class="feedback"></div>
         <button class="action-btn" style="background-color: var(--primary);" onclick="gerarDesafioAba10()">Novo Desafio</button>
+    </div>
+
+    <div id="aba11" class="game-panel">
+        <h2>Encontre a <span id="alvo-grau-aba11" style="color: var(--accent); font-size: 1.4em;"></span> de <span id="alvo-tonica-aba11" style="color: var(--accent); font-size: 1.4em;"></span></h2>
+        <p>O <b>Shape <span id="alvo-shape-aba11" style="color: var(--accent);"></span></b> da <b>Pentatônica Maior</b> está destacado. <br>Clique no braço onde se encontra a nota correspondente a esse grau!</p>
+        
+        <div class="fretboard-container"><div id="fretboard11" class="fretboard"></div></div>
+        <div id="feedback11" class="feedback"></div>
+        
+        <button class="action-btn" style="background-color: var(--primary);" onclick="gerarDesafioAba11()">Novo Desafio</button>
     </div>
 
     <script>
@@ -683,15 +685,9 @@
             else { fb.style.color = 'var(--wrong)'; fb.innerHTML = `O acorde é <b>${nomeAcordeEsperadoAba6}</b>. Notas: ${notasDoAcordeAba6.join(', ')}.`; }
         }
 
-        /* ABA 7 */
-        let pentaFaseAtual = 1;
-        let pentaTonicaAtual = 'A';
-        let pentaShapeAtualNum = 1;
-        let pIntrusoState = { wrongId: '', correctId: '', clickedWrong: false };
-
+        /* ABA 7 - Helper para Shapes Menores */
         function getShapePositions(tonica, shapeNum) {
             let baseFret = (notasCromaticas.indexOf(tonica) - notasCromaticas.indexOf('E') + 12) % 12;
-            let offsets = [0, 3, 5, 7, 10];
             let relativePatterns = {
                 1: [ [0,3], [0,2], [0,2], [0,2], [0,3], [0,3] ],
                 2: [ [3,5], [2,5], [2,5], [2,4], [3,5], [3,5] ],
@@ -712,6 +708,11 @@
 
             return positions;
         }
+
+        let pentaFaseAtual = 1;
+        let pentaTonicaAtual = 'A';
+        let pentaShapeAtualNum = 1;
+        let pIntrusoState = { wrongId: '', correctId: '', clickedWrong: false };
 
         function setPentaFase(fase) {
             pentaFaseAtual = fase;
@@ -898,13 +899,12 @@
         function gerarDesafioAba10() {
             document.querySelectorAll('#fretboard10 .fret').forEach(f => {
                 f.classList.remove('force-show', 'blink', 'correct-click', 'wrong-click');
-                // Esconde a nota para o desafio
                 f.querySelector('.note-marker').innerText = '?';
             });
             document.getElementById('feedback10').innerText = '';
 
             const corda = Math.floor(Math.random() * 6);
-            const casa = Math.floor(Math.random() * 12); // Limitado a 12 para treino inicial
+            const casa = Math.floor(Math.random() * 12);
 
             const idStr = `fretboard10-s${corda}-f${casa}`;
             fretDestacadoAba10 = document.getElementById(idStr);
@@ -929,16 +929,87 @@
             }
         }
 
+        /* -------------------------------------------------------------
+           ABA 11 - GRAUS NA PENTA MAIOR (Novo Jogo Adicionado!)
+           ------------------------------------------------------------- */
+        const intervalosAvancados = [
+            { nome: '3ª Maior (Terça)', semitons: 4 },
+            { nome: '5ª Justa (Quinta)', semitons: 7 },
+            { nome: '9ª (Nona / 2ª Maior)', semitons: 2 },
+            { nome: '11ª (Décima Primeira / 4ª Justa)', semitons: 5 },
+            { nome: '13ª (Décima Terceira / 6ª Maior)', semitons: 9 },
+            { nome: '7ª Maior (Sétima)', semitons: 11 },
+            { nome: '7ª Menor', semitons: 10 }
+        ];
+
+        let tonicaAtualAba11 = '';
+        let notaAlvoAba11 = '';
+
+        function gerarDesafioAba11() {
+            tonicaAtualAba11 = getNotaAleatoria();
+            const shapeNum = Math.floor(Math.random() * 5) + 1;
+            const intervalo = intervalosAvancados[Math.floor(Math.random() * intervalosAvancados.length)];
+
+            notaAlvoAba11 = addSemitons(tonicaAtualAba11, intervalo.semitons);
+
+            document.getElementById('alvo-tonica-aba11').innerText = tonicaAtualAba11;
+            document.getElementById('alvo-grau-aba11').innerText = intervalo.nome;
+            document.getElementById('alvo-shape-aba11').innerText = shapeNum;
+            document.getElementById('feedback11').innerText = '';
+
+            // Limpa o braço
+            document.querySelectorAll('#fretboard11 .fret').forEach(f => {
+                f.classList.remove('force-show', 'correct-click', 'wrong-click', 'clicked');
+            });
+
+            // Lógica para achar os Shapes da Penta Maior:
+            // A Pentatônica Maior de um tom possui exatamente o mesmo desenho físico
+            // da Pentatônica Menor do seu relativo menor (Tônica - 3 semitons).
+            // A correspondência de shapes é: Maior 1 = Menor 2, Maior 2 = Menor 3, etc.
+            let relativaMenor = addSemitons(tonicaAtualAba11, 9); // +9 semitons equivale a -3 (Relativa Menor)
+            const mapMaiorParaMenor = { 1: 2, 2: 3, 3: 4, 4: 5, 5: 1 };
+            let minorShapeNum = mapMaiorParaMenor[shapeNum];
+
+            let posicoesShape = getShapePositions(relativaMenor, minorShapeNum);
+
+            // Destaca o shape na região de 0 a 11 e também clona para a oitava acima (12 a 23)
+            posicoesShape.forEach(pos => {
+                let fretEl = document.getElementById(`fretboard11-s${pos.s}-f${pos.f}`);
+                if(fretEl) fretEl.classList.add('force-show');
+
+                let oitavaAcima = pos.f + 12;
+                let fretElOitava = document.getElementById(`fretboard11-s${pos.s}-f${oitavaAcima}`);
+                if(fretElOitava && oitavaAcima <= 24) fretElOitava.classList.add('force-show');
+            });
+        }
+
+        function handleClickAba11(fretEl) {
+            const notaClicada = fretEl.dataset.nota;
+            const fb = document.getElementById('feedback11');
+
+            if (notaClicada === notaAlvoAba11) {
+                fretEl.classList.add('correct-click', 'clicked');
+                fb.style.color = 'var(--correct)';
+                fb.innerText = `Correto! A nota ${notaAlvoAba11} é a ${document.getElementById('alvo-grau-aba11').innerText} de ${tonicaAtualAba11}. 🎸`;
+            } else {
+                fretEl.classList.add('wrong-click', 'clicked');
+                fb.style.color = 'var(--wrong)';
+                fb.innerText = `Ops! Você clicou em ${notaClicada}. Tente encontrar a nota ${notaAlvoAba11}.`;
+            }
+        }
+
+
         window.onload = () => {
             criarBraco('fretboard1', false, null, 24); 
             criarBraco('fretboard2', true, null, 24);
             criarBraco('fretboard6', true, null, 24); 
             criarBraco('fretboard7', true, null, 24);
             
-            /* Adicione estas duas linhas para a ABA 10 */
             criarBraco('fretboard10', false, null, 24);
             inicializarBotoesAba10();
-            /* -------------------------------------- */
+            
+            // Inicializa a nova Aba 11
+            criarBraco('fretboard11', false, handleClickAba11, 24);
 
             criarBraco('fretboard8', false, (fretEl) => {
                 fretEl.classList.add('clicked', 'selected');
@@ -955,9 +1026,8 @@
             gerarPerguntaAcordeGrau();
             setPentaFase(1);
             gerarDesafioAba9();
-            
-            /* Adicione esta linha para gerar o primeiro desafio da ABA 10 */
             gerarDesafioAba10();
+            gerarDesafioAba11(); // Chama o primeiro desafio da nova aba
         };
 
         /* ABA 9 */
