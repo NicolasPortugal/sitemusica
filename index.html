@@ -1083,10 +1083,19 @@
                 posicoesShape = getShapePositionsMaior(tonicaAtualAba11, shapeNum);
             }
 
-            posicoesShape.forEach(pos => {
+            let tonicas = posicoesShape.filter(pos => {
                 let fretEl = document.getElementById(`fretboard11-s${pos.s}-f${pos.f}`);
-                if(fretEl) fretEl.classList.add('force-show');
+                return fretEl && fretEl.dataset.nota === tonicaAtualAba11;
             });
+
+            if (tonicas.length > 0) {
+                tonicas.sort((a, b) => a.s - b.s);
+                let tonicaMaisAcima = tonicas[0];
+                let fretEl = document.getElementById(`fretboard11-s${tonicaMaisAcima.s}-f${tonicaMaisAcima.f}`);
+                if (fretEl) {
+                    fretEl.classList.add('force-show');
+                }
+            }
         }
 
         // --- FUNÇÕES DA NOVA ABA 12 ---
