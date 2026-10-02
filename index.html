@@ -1078,6 +1078,23 @@
         background: #1e1e1f;
         border-right: 5px solid #c1b8a6;
       }
+      .fretboard.reversed .ruler-label,
+      .fretboard.reversed .string-name {
+        order: 1;
+        left: auto;
+        right: 0;
+      }
+      .fretboard.reversed .string-name {
+        border-right: 0;
+        border-left: 1px solid #534b42;
+      }
+      .fretboard.reversed .fret {
+        border-right: 0;
+        border-left: 2px solid #88827b;
+      }
+      .fretboard.reversed .fret.open {
+        border-left: 5px solid #c1b8a6;
+      }
       .fret.in-region {
         background: #d4b6800d;
       }
@@ -1806,7 +1823,7 @@
       <p class="guide-intro">Escolha uma atividade abaixo para abrir o treino. Pelo menu, entre na área e use o seletor Exercício.</p>
       <div id="guide-content"></div>
       <div class="dialog-separator"></div>
-      <p class="guide-intro">Em Configurações, escolha a orientação do braço. No Tocar livre, ative Manter marcações para desenhar várias notas na mesma corda; remova cada marca com o botão direito.</p>
+      <p class="guide-intro">Em Configurações, escolha a ordem das cordas e o sentido das casas: esquerda → direita ou direita → esquerda. No Tocar livre, ative Manter marcações para desenhar várias notas na mesma corda; remova cada marca com o botão direito.</p>
     </dialog>
     <dialog id="settings-dialog" aria-labelledby="settings-title">
       <div class="dialog-top">
@@ -1833,6 +1850,11 @@
           >Orientação do braço<select id="orientation-setting">
             <option value="tab">Atual: 1ª aguda em cima · 6ª grave embaixo</option>
             <option value="bass">Invertido: 6ª grave em cima · 1ª aguda embaixo</option>
+          </select></label
+        ><label class="field"
+          >Sentido das casas<select id="direction-setting">
+            <option value="ltr">Esquerda → direita · casa 0 à esquerda</option>
+            <option value="rtl">Direita → esquerda · casa 0 à direita</option>
           </select></label
         >
         <p>
@@ -2450,6 +2472,7 @@
           volume: 60,
           size: 76,
           orientation: "tab",
+          direction: "ltr",
           last: "harmonia/field",
           root: "all",
           mode: "major",
@@ -2470,6 +2493,7 @@
                 volume: Number.isFinite(p.volume) ? Math.max(0, Math.min(100, p.volume)) : 60,
                 size: [64, 76, 92].includes(p.size) ? p.size : 76,
                 orientation: p.orientation === "bass" ? "bass" : "tab",
+                direction: p.direction === "rtl" ? "rtl" : "ltr",
                 last:
                   typeof p.last === "string" && /^(braco|escalas|harmonia)\/[a-zA-Z]+$/.test(p.last)
                     ? p.last
@@ -2719,11 +2743,14 @@
             this.describe = describe;
             this.region = region;
             this.cells = new Map();
+            this.reversed = prefs.direction === "rtl";
+            this.frets = Array.from({ length: last + 1 }, (_, f) => f);
+            if (this.reversed) this.frets.reverse();
             this.rows = prefs.orientation === "tab" ? [5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5];
             this.render();
           }
           render() {
-            this.host.innerHTML = `<div class="board-scroll" aria-label="Braço da guitarra; role para ver outras casas"><div class="fretboard"><div class="fret-ruler" aria-hidden="true"><span class="ruler-label"></span>${Array.from({ length: this.last + 1 }, (_, f) => `<span class="fret-number ${[3, 5, 7, 9, 12, 15, 17, 19, 21, 24].includes(f) ? "inlay" : ""}">${f === 0 ? "0 · solta" : f}</span>`).join("")}</div>${this.rows.map((s, row) => `<div class="string-row" style="--string-thickness:${(1 + (5 - s) / 2).toFixed(1)}px"><span class="string-name" aria-hidden="true"><small>${6 - s}ª</small>${["E", "A", "D", "G", "B", "e"][s]}</span>${Array.from({ length: this.last + 1 }, (_, f) => `<button type="button" class="fret ${f === 0 ? "open" : ""}" data-string="${s}" data-fret="${f}" tabindex="${row === 0 && f === 0 ? "0" : "-1"}" aria-label="${6 - s}ª corda, ${f === 0 ? "solta" : "casa " + f}"><span class="marker"></span>${([3, 5, 7, 9, 15, 17, 19, 21].includes(f) && row === 2) || ([12, 24].includes(f) && (row === 1 || row === 3)) ? '<span class="inlay-dot"></span>' : ""}</button>`).join("")}</div>`).join("")}</div></div>`;
+            this.host.innerHTML = `<div class="board-scroll" aria-label="Braço da guitarra; role para ver outras casas"><div class="fretboard${this.reversed ? " reversed" : ""}"><div class="fret-ruler" aria-hidden="true"><span class="ruler-label"></span>${this.frets.map((f) => `<span class="fret-number ${[3, 5, 7, 9, 12, 15, 17, 19, 21, 24].includes(f) ? "inlay" : ""}">${f === 0 ? "0 · solta" : f}</span>`).join("")}</div>${this.rows.map((s, row) => `<div class="string-row" style="--string-thickness:${(1 + (5 - s) / 2).toFixed(1)}px"><span class="string-name" aria-hidden="true"><small>${6 - s}ª</small>${["E", "A", "D", "G", "B", "e"][s]}</span>${this.frets.map((f) => `<button type="button" class="fret ${f === 0 ? "open" : ""}" data-string="${s}" data-fret="${f}" tabindex="${row === 0 && f === 0 ? "0" : "-1"}" aria-label="${6 - s}ª corda, ${f === 0 ? "solta" : "casa " + f}"><span class="marker"></span>${([3, 5, 7, 9, 15, 17, 19, 21].includes(f) && row === 2) || ([12, 24].includes(f) && (row === 1 || row === 3)) ? '<span class="inlay-dot"></span>' : ""}</button>`).join("")}</div>`).join("")}</div></div>`;
             this.scroll = this.host.querySelector(".board-scroll");
             this.host.querySelectorAll(".fret").forEach((cell) => {
               const s = Number(cell.dataset.string),
@@ -2743,8 +2770,8 @@
                 const row = this.rows.indexOf(s);
                 let ns = s,
                   nf = f;
-                if (e.key === "ArrowRight") nf = Math.min(this.last, f + 1);
-                else if (e.key === "ArrowLeft") nf = Math.max(0, f - 1);
+                if (e.key === "ArrowRight") nf = Math.max(0, Math.min(this.last, f + (this.reversed ? -1 : 1)));
+                else if (e.key === "ArrowLeft") nf = Math.max(0, Math.min(this.last, f + (this.reversed ? 1 : -1)));
                 else if (e.key === "ArrowDown") ns = this.rows[Math.min(5, row + 1)];
                 else if (e.key === "ArrowUp") ns = this.rows[Math.max(0, row - 1)];
                 else if (e.key === "Home") nf = 0;
@@ -2755,6 +2782,7 @@
               });
             });
             this.update();
+            if (this.reversed) this.scroll.scrollLeft = this.scroll.scrollWidth;
           }
           focusCell(cell, focus) {
             const old = this.host.querySelector('.fret[tabindex="0"]');
@@ -2762,11 +2790,12 @@
             cell.tabIndex = 0;
             if (focus) {
               cell.focus({ preventScroll: true });
-              const left = cell.offsetLeft,
-                right = left + cell.offsetWidth;
-              if (left < this.scroll.scrollLeft + 48) this.scroll.scrollLeft = left - 48;
-              else if (right > this.scroll.scrollLeft + this.scroll.clientWidth)
-                this.scroll.scrollLeft = right - this.scroll.clientWidth;
+              const bounds = cell.getBoundingClientRect(),
+                viewport = this.scroll.getBoundingClientRect(),
+                left = viewport.left + (this.reversed ? 0 : 48),
+                right = viewport.left + this.scroll.clientWidth - (this.reversed ? 48 : 0);
+              if (bounds.left < left) this.scroll.scrollLeft += bounds.left - left;
+              else if (bounds.right > right) this.scroll.scrollLeft += bounds.right - right;
             }
           }
           update() {
@@ -2800,7 +2829,9 @@
           showRegion(lo, hi = lo) {
             requestAnimationFrame(() => {
               const width = Number(prefs.size),
-                center = 48 + ((lo + hi + 1) * width) / 2;
+                center = this.reversed
+                  ? (this.last + 1 - (lo + hi + 1) / 2) * width
+                  : 48 + ((lo + hi + 1) * width) / 2;
               this.scroll.scrollLeft = Math.max(0, center - this.scroll.clientWidth / 2);
             });
           }
@@ -3172,7 +3203,7 @@
                     )
                     .join("")}</select></label></div>`
                 : ""
-            }${mode === "progression" ? `<div class="inline-controls"><label>Progressão <select id="pattern-choice"><option value="random">Aleatória</option>${progressionSets[prefs.mode].map((p, i) => `<option value="${i}" ${String(i) === patternChoice ? "selected" : ""}>${p.map((d) => q.field[d].roman).join(" – ")}</option>`).join("")}</select></label></div><div id="sequence" class="sequence" aria-label="Acordes da progressão"></div>` : ""}${q.kind.startsWith("board") ? `<div id="board-host"></div><div class="board-caption"><span>${prefs.orientation === "tab" ? "1ª corda (aguda) em cima · 6ª (grave) embaixo" : "6ª corda (grave) em cima · 1ª (aguda) embaixo"}</span><span>Casas com largura fixa · deslize para explorar →</span></div><div class="legend"><span><i class="root"></i> ${mode === "identify" ? "Posição a identificar" : "Tônica / seleção"}</span><span><i class="hollow"></i> ${route === "escalas" || mode === "target" ? "Posições do shape" : "Uma nota por casa"}</span></div>` : ""}${q.kind === "intervals" ? `<div class="interval-grid">${q.intervals.map((v, i) => `<label class="field">${v.label}<select class="interval-answer" data-index="${i}"><option value="">Selecione</option>${q.options.map((o) => `<option value="${o.id}">${o.label}</option>`).join("")}</select></label>`).join("")}</div>` : ""}${q.options.length && q.kind !== "intervals" ? '<div id="options" class="options"></div>' : ""}${["boardMulti", "multi"].includes(q.kind) ? '<div id="selection-summary" class="selection-line"></div>' : ""}<div id="feedback" class="feedback" role="status" aria-live="polite"></div><div id="solution"></div></div><div class="action-row"><div class="action-cluster">${multi ? `<button class="btn primary" id="check-answer" type="button">${icon("check")}Verificar</button>` : ""}${q.kind === "sequence" ? `<button class="btn" id="undo-answer" type="button">${icon("undo")}Desfazer</button>` : ""}${q.chord || q.audioNote || q.kind === "sequence" ? `<button class="btn" id="listen-answer" type="button">${icon("sound")}${q.kind === "sequence" ? "Ouvir sequência" : q.audioNote ? "Ouvir nota" : "Ouvir acorde"}</button>` : ""}<button class="btn ${multi ? "" : "primary"}" id="next-question" type="button">Próximo ${icon("arrow")}<span class="shortcut">N</span></button></div><div class="action-cluster"><button class="btn text" id="hint-button" type="button">Dica</button><button class="btn text" id="reveal-button" type="button">Ver resposta</button></div></div></section><details class="lesson-note"><summary>Como aproveitar este treino</summary><p>${lessonText()}</p></details>`;
+            }${mode === "progression" ? `<div class="inline-controls"><label>Progressão <select id="pattern-choice"><option value="random">Aleatória</option>${progressionSets[prefs.mode].map((p, i) => `<option value="${i}" ${String(i) === patternChoice ? "selected" : ""}>${p.map((d) => q.field[d].roman).join(" – ")}</option>`).join("")}</select></label></div><div id="sequence" class="sequence" aria-label="Acordes da progressão"></div>` : ""}${q.kind.startsWith("board") ? `<div id="board-host"></div><div class="board-caption"><span>${prefs.orientation === "tab" ? "1ª corda (aguda) em cima · 6ª (grave) embaixo" : "6ª corda (grave) em cima · 1ª (aguda) embaixo"}</span><span>Casas com largura fixa · deslize para explorar</span></div><div class="legend"><span><i class="root"></i> ${mode === "identify" ? "Posição a identificar" : "Tônica / seleção"}</span><span><i class="hollow"></i> ${route === "escalas" || mode === "target" ? "Posições do shape" : "Uma nota por casa"}</span></div>` : ""}${q.kind === "intervals" ? `<div class="interval-grid">${q.intervals.map((v, i) => `<label class="field">${v.label}<select class="interval-answer" data-index="${i}"><option value="">Selecione</option>${q.options.map((o) => `<option value="${o.id}">${o.label}</option>`).join("")}</select></label>`).join("")}</div>` : ""}${q.options.length && q.kind !== "intervals" ? '<div id="options" class="options"></div>' : ""}${["boardMulti", "multi"].includes(q.kind) ? '<div id="selection-summary" class="selection-line"></div>' : ""}<div id="feedback" class="feedback" role="status" aria-live="polite"></div><div id="solution"></div></div><div class="action-row"><div class="action-cluster">${multi ? `<button class="btn primary" id="check-answer" type="button">${icon("check")}Verificar</button>` : ""}${q.kind === "sequence" ? `<button class="btn" id="undo-answer" type="button">${icon("undo")}Desfazer</button>` : ""}${q.chord || q.audioNote || q.kind === "sequence" ? `<button class="btn" id="listen-answer" type="button">${icon("sound")}${q.kind === "sequence" ? "Ouvir sequência" : q.audioNote ? "Ouvir nota" : "Ouvir acorde"}</button>` : ""}<button class="btn ${multi ? "" : "primary"}" id="next-question" type="button">Próximo ${icon("arrow")}<span class="shortcut">N</span></button></div><div class="action-cluster"><button class="btn text" id="hint-button" type="button">Dica</button><button class="btn text" id="reveal-button" type="button">Ver resposta</button></div></div></section><details class="lesson-note"><summary>Como aproveitar este treino</summary><p>${lessonText()}</p></details>`;
           $("#exercise-select").addEventListener("change", (e) => {
             location.hash = `${route}/${e.target.value}`;
           });
@@ -3772,7 +3803,7 @@
               )
               .join(
                 "",
-              )}</select></label><label class="field">Casas<select id="free-range"><option value="12" ${free.range === 12 ? "selected" : ""}>12</option><option value="24" ${free.range === 24 ? "selected" : ""}>24</option></select></label></div><section class="exercise-card free-card"><div class="question-header"><div><h2>Braço da guitarra</h2><p>Toque uma casa para ouvir e selecionar. Monte um acorde, ouça junto ou nota por nota.</p></div></div><div class="exercise-body"><div class="inline-controls"><label><input type="checkbox" id="free-show-all" ${free.showAll ? "checked" : ""}> Mostrar todas as posições</label><label><input type="checkbox" id="free-keep-marks" ${prefs.keepMarks ? "checked" : ""}> Manter marcações</label><span class="muted">${prefs.orientation === "tab" ? "1ª corda aguda em cima" : "6ª corda grave em cima"}</span></div><div id="board-host"></div><div class="board-caption"><span>Casas com a mesma largura dos exercícios</span><span>Deslize para ver até a casa ${free.range} →</span></div><div class="legend"><span><i class="root"></i> Tônica de ${freeRoot()}</span><span><i></i> Notas</span><span><i class="hollow"></i> Contorno: seleção</span></div><p class="guide-intro" id="free-marking-help">${prefs.keepMarks ? "Marque várias casas na mesma corda. Clique novamente para ouvir sem apagar; use o botão direito para remover cada marcação. Limpar seleção apaga todas de uma vez." : "Uma nota por corda. Clique de novo para remover ou use o botão direito."}</p><div class="selection-line" id="free-selection"></div><div class="feedback" id="free-chord-info" role="status" aria-live="polite"></div></div><div class="action-row"><div class="action-cluster"><button class="btn primary" id="free-strum" type="button">${icon("sound")}${prefs.keepMarks ? "Ouvir marcações" : "Ouvir acorde"}</button><button class="btn" id="free-arpeggio" type="button">${icon("play")}Arpejar</button><button class="btn" id="free-stop" type="button">${icon("stop")}Parar</button></div><button class="btn text" id="free-clear" type="button">Limpar seleção</button></div></section><div class="tip-strip">${icon("bulb")}<p><strong>Faça uma conexão.</strong> Escolha C maior no guia e alterne entre Notas e Graus. Encontre 1–3–5; depois 2–4–6. Você acabou de localizar C e Dm na mesma escala.</p></div>`;
+              )}</select></label><label class="field">Casas<select id="free-range"><option value="12" ${free.range === 12 ? "selected" : ""}>12</option><option value="24" ${free.range === 24 ? "selected" : ""}>24</option></select></label></div><section class="exercise-card free-card"><div class="question-header"><div><h2>Braço da guitarra</h2><p>Toque uma casa para ouvir e selecionar. Monte um acorde, ouça junto ou nota por nota.</p></div></div><div class="exercise-body"><div class="inline-controls"><label><input type="checkbox" id="free-show-all" ${free.showAll ? "checked" : ""}> Mostrar todas as posições</label><label><input type="checkbox" id="free-keep-marks" ${prefs.keepMarks ? "checked" : ""}> Manter marcações</label><span class="muted">${prefs.orientation === "tab" ? "1ª corda aguda em cima" : "6ª corda grave em cima"}</span></div><div id="board-host"></div><div class="board-caption"><span>Casas com a mesma largura dos exercícios</span><span>Deslize para ver até a casa ${free.range}</span></div><div class="legend"><span><i class="root"></i> Tônica de ${freeRoot()}</span><span><i></i> Notas</span><span><i class="hollow"></i> Contorno: seleção</span></div><p class="guide-intro" id="free-marking-help">${prefs.keepMarks ? "Marque várias casas na mesma corda. Clique novamente para ouvir sem apagar; use o botão direito para remover cada marcação. Limpar seleção apaga todas de uma vez." : "Uma nota por corda. Clique de novo para remover ou use o botão direito."}</p><div class="selection-line" id="free-selection"></div><div class="feedback" id="free-chord-info" role="status" aria-live="polite"></div></div><div class="action-row"><div class="action-cluster"><button class="btn primary" id="free-strum" type="button">${icon("sound")}${prefs.keepMarks ? "Ouvir marcações" : "Ouvir acorde"}</button><button class="btn" id="free-arpeggio" type="button">${icon("play")}Arpejar</button><button class="btn" id="free-stop" type="button">${icon("stop")}Parar</button></div><button class="btn text" id="free-clear" type="button">Limpar seleção</button></div></section><div class="tip-strip">${icon("bulb")}<p><strong>Faça uma conexão.</strong> Escolha C maior no guia e alterne entre Notas e Graus. Encontre 1–3–5; depois 2–4–6. Você acabou de localizar C e Dm na mesma escala.</p></div>`;
           board = new Fretboard($("#board-host"), {
             last: free.range,
             describe: freeMarker,
@@ -3893,6 +3924,7 @@
           $("#volume-setting").value = prefs.volume;
           $("#size-setting").value = prefs.size;
           $("#orientation-setting").value = prefs.orientation;
+          $("#direction-setting").value = prefs.direction;
           $("#settings-dialog").showModal();
         });
         $("#settings-close").addEventListener("click", () => $("#settings-dialog").close());
@@ -3922,9 +3954,7 @@
           document.documentElement.style.setProperty("--fret-width", prefs.size + "px");
           save();
         });
-        $("#orientation-setting").addEventListener("change", (e) => {
-          prefs.orientation = e.target.value;
-          save();
+        function refreshBoardLayout() {
           if (board && route !== "inicio" && (route === "livre" || q?.kind.startsWith("board"))) {
             if (route === "livre") renderFree();
             else {
@@ -3941,6 +3971,16 @@
                   : "6ª corda (grave) em cima · 1ª (aguda) embaixo";
             }
           }
+        }
+        $("#orientation-setting").addEventListener("change", (e) => {
+          prefs.orientation = e.target.value;
+          save();
+          refreshBoardLayout();
+        });
+        $("#direction-setting").addEventListener("change", (e) => {
+          prefs.direction = e.target.value;
+          save();
+          refreshBoardLayout();
         });
         $("#export-progress").addEventListener("click", () => {
           const blob = new Blob(
