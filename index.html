@@ -1190,6 +1190,45 @@
       .dialog-top h2 {
         font-size: 23px;
       }
+      #guide-dialog {
+        width: min(760px, calc(100% - 32px));
+      }
+      #guide-open > span[aria-hidden] {
+        width: 21px;
+        height: 21px;
+        border: 1px solid currentColor;
+        border-radius: 50%;
+        display: inline-grid;
+        place-items: center;
+        font-weight: 600;
+        flex: none;
+      }
+      .guide-intro {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.7;
+        margin-bottom: 16px;
+      }
+      .guide-group { margin-top: 22px; }
+      .guide-group h3 { font-size: 16px; margin-bottom: 8px; }
+      .guide-list { list-style: none; padding: 0; margin: 0; }
+      .guide-link {
+        display: block;
+        padding: 12px 8px;
+        border-bottom: 1px solid var(--line);
+        border-radius: 5px;
+        text-decoration: none;
+      }
+      .guide-link:hover { background: var(--panel-hover, #292b2f); }
+      .guide-link strong { display: block; font-size: 13px; color: var(--text); }
+      .guide-link small, .guide-link span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.6;
+        margin-top: 4px;
+        overflow-wrap: anywhere;
+      }
       .settings-fields {
         display: grid;
         gap: 22px;
@@ -1745,7 +1784,7 @@
             aria-label="Desativar som"
             aria-pressed="true"
           ></button
-          ><button class="quiet-btn" id="settings-open" type="button"></button>
+          ><button class="quiet-btn" id="guide-open" type="button" aria-label="Abrir guia de atividades" title="Guia de atividades"><span aria-hidden="true">?</span><span class="button-label">Guia</span></button><button class="quiet-btn" id="settings-open" type="button"></button>
         </div>
       </header>
       <main id="main" class="content" tabindex="-1">
@@ -1759,6 +1798,16 @@
         </footer>
       </main>
     </div>
+    <dialog id="guide-dialog" aria-labelledby="guide-title">
+      <div class="dialog-top">
+        <h2 id="guide-title">Guia de atividades</h2>
+        <button class="quiet-btn" id="guide-close" type="button" aria-label="Fechar guia">✕</button>
+      </div>
+      <p class="guide-intro">Escolha uma atividade abaixo para abrir o treino. Pelo menu, entre na área e use o seletor Exercício.</p>
+      <div id="guide-content"></div>
+      <div class="dialog-separator"></div>
+      <p class="guide-intro">Em Configurações, escolha a orientação do braço. No Tocar livre, ative Manter marcações para desenhar várias notas na mesma corda; remova cada marca com o botão direito.</p>
+    </dialog>
     <dialog id="settings-dialog" aria-labelledby="settings-title">
       <div class="dialog-top">
         <h2 id="settings-title">Do seu jeito.</h2>
@@ -1781,9 +1830,9 @@
             <option value="92">Grande</option>
           </select></label
         ><label class="field"
-          >Cordas na tela<select id="orientation-setting">
-            <option value="tab">Tablatura: 1ª corda (aguda) em cima</option>
-            <option value="bass">6ª corda (grave) em cima</option>
+          >Orientação do braço<select id="orientation-setting">
+            <option value="tab">Atual: 1ª aguda em cima · 6ª grave embaixo</option>
+            <option value="bass">Invertido: 6ª grave em cima · 1ª aguda embaixo</option>
           </select></label
         >
         <p>
@@ -2371,6 +2420,30 @@
           degreeChord: "Acorde do grau no braço",
           target: "Notas-alvo do acorde",
         };
+        const activityHelp = {
+          find: "Encontre uma ocorrência da nota pedida em cada uma das seis cordas.",
+          identify: "Descubra o nome da nota marcada no braço.",
+          buildChord: "Monte uma tríade maior, menor ou diminuta no braço.",
+          buildShape: "Marque todas as posições do shape de escala ou pentatônica pedido.",
+          shapeDegree: "Localize as ocorrências de um grau dentro do shape.",
+          roots: "Encontre todas as tônicas nas posições do shape.",
+          intruder: "Ache a nota fora da escala e indique a posição correta na mesma corda.",
+          connect: "Complete as notas novas do shape vizinho para ligar duas regiões.",
+          field: "Identifique o acorde de um grau do campo maior ou menor natural.",
+          progression: "Transforme uma sequência de graus em acordes no tom escolhido.",
+          scaleDegree: "Identifique a nota correspondente a um grau da escala.",
+          intervals: "Encontre a terça, a quinta e, se ativada, a sétima da tônica.",
+          formation: "Selecione as notas que formam uma escala, pentatônica ou tríade.",
+          degreeName: "Associe os números dos graus aos nomes, como tônica e dominante.",
+          degreeChord: "Monte no braço o acorde do grau pedido no campo harmônico.",
+          target: "Localize a tônica, terça ou quinta do acorde atual dentro de uma região.",
+        };
+        function renderGuide() {
+          $("#guide-content").innerHTML = Object.entries(config)
+            .filter(([, c]) => c.modes)
+            .map(([area, c]) => `<section class="guide-group"><h3>${c.title}</h3><ul class="guide-list">${c.modes.map((id) => `<li><a class="guide-link" href="#${area}/${id}"><strong>${modes[id]}</strong><span>${activityHelp[id]}</span><small>Caminho: ${c.title} → Exercício → ${modes[id]}</small></a></li>`).join("")}</ul></section>`)
+            .join("") + `<section class="guide-group"><h3>Exploração e acompanhamento</h3><ul class="guide-list"><li><a class="guide-link" href="#livre"><strong>Tocar livre</strong><span>Ouça notas, acorde e arpejo; veja escalas, pentatônicas, nomes e graus. Manter marcações permite desenhar várias posições por corda.</span><small>Caminho: Tocar livre</small></a></li><li><a class="guide-link" href="#inicio"><strong>Visão geral</strong><span>Retome o último exercício e acompanhe a prática do dia e o progresso por área.</span><small>Caminho: Visão geral</small></a></li></ul></section>`;
+        }
         const STORE = "fretboard-studio-v2";
         const defaults = {
           sound: true,
@@ -2383,6 +2456,7 @@
           scale: "major",
           shape: "all",
           sevenths: false,
+          keepMarks: false,
         };
         let storageAvailable = true;
         function load() {
@@ -2408,6 +2482,7 @@
                 scale: ["major", "pentaMajor", "pentaMinor"].includes(p.scale) ? p.scale : "major",
                 shape: [1, 2, 3, 4, 5].includes(p.shape) ? p.shape : "all",
                 sevenths: p.sevenths === true,
+                keepMarks: p.keepMarks === true,
               },
               days:
                 raw.days && typeof raw.days === "object" && !Array.isArray(raw.days)
@@ -3632,7 +3707,8 @@
         function freePick(s, f) {
           audio.note(Theory.midi(s, f), s);
           const key = Theory.position(s, f);
-          if (free.selected.has(key)) free.selected.delete(key);
+          if (prefs.keepMarks) free.selected.add(key);
+          else if (free.selected.has(key)) free.selected.delete(key);
           else {
             for (const old of [...free.selected])
               if (Number(old.split(":")[0]) === s) free.selected.delete(old);
@@ -3644,7 +3720,7 @@
         function freeSummary() {
           const coords = [...free.selected]
               .map((k) => k.split(":").map(Number))
-              .sort((a, b) => a[0] - b[0]),
+              .sort((a, b) => a[0] - b[0] || a[1] - b[1]),
             pcs = new Set(coords.map(([s, f]) => Theory.note(s, f))),
             root = freeRoot();
           $("#free-selection").innerHTML = coords.length
@@ -3655,8 +3731,13 @@
                 )
                 .join("")
             : "Selecione uma casa para ouvir a primeira nota.";
-          let text = "Uma nota por corda. Clique de novo para remover.";
-          if (pcs.size === 3) {
+          const stringCount = new Set(coords.map(([s]) => s)).size;
+          let text = prefs.keepMarks
+            ? "Marcas mantidas. Clique para tocar; botão direito para desmarcar."
+            : "Uma nota por corda. Clique de novo para remover.";
+          if (coords.length)
+            text = `${coords.length} ${coords.length === 1 ? "posição marcada" : "posições marcadas"} em ${stringCount} ${stringCount === 1 ? "corda" : "cordas"} · ${pcs.size} ${pcs.size === 1 ? "nota distinta" : "notas distintas"}`;
+          if (pcs.size === 3 && stringCount === coords.length) {
             const found = Theory.chromatic
               .flatMap((n) => ["major", "minor", "dim"].map((quality) => Theory.chord(n, quality)))
               .find((c) => sameSet(new Set(c.pcs), pcs));
@@ -3670,8 +3751,7 @@
                 chord = Theory.chord(rootName, found.quality);
               text = `${chord.name}${bass !== found.pc ? "/" + (chord.notes.find((n) => Theory.pc(n) === bass) || Theory.chromatic[bass]) : ""} · ${chord.notes.join(" · ")}${bass !== found.pc ? " · inversão" : ""}`;
             }
-          } else if (coords.length)
-            text = `${coords.length} ${coords.length === 1 ? "corda selecionada" : "cordas selecionadas"} · ${pcs.size} ${pcs.size === 1 ? "nota distinta" : "notas distintas"}`;
+          }
           $("#free-chord-info").textContent = text;
           $("#free-strum").disabled = coords.length === 0;
           $("#free-arpeggio").disabled = coords.length === 0;
@@ -3692,7 +3772,7 @@
               )
               .join(
                 "",
-              )}</select></label><label class="field">Casas<select id="free-range"><option value="12" ${free.range === 12 ? "selected" : ""}>12</option><option value="24" ${free.range === 24 ? "selected" : ""}>24</option></select></label></div><section class="exercise-card free-card"><div class="question-header"><div><h2>Braço da guitarra</h2><p>Toque uma casa para ouvir e selecionar. Monte um acorde, ouça junto ou nota por nota.</p></div></div><div class="exercise-body"><div class="inline-controls"><label><input type="checkbox" id="free-show-all" ${free.showAll ? "checked" : ""}> Mostrar todas as posições</label><span class="muted">${prefs.orientation === "tab" ? "1ª corda aguda em cima" : "6ª corda grave em cima"}</span></div><div id="board-host"></div><div class="board-caption"><span>Casas com a mesma largura dos exercícios</span><span>Deslize para ver até a casa ${free.range} →</span></div><div class="legend"><span><i class="root"></i> Tônica de ${freeRoot()}</span><span><i></i> Notas</span><span><i class="hollow"></i> Contorno: seleção</span></div><div class="selection-line" id="free-selection"></div><div class="feedback" id="free-chord-info" role="status" aria-live="polite"></div></div><div class="action-row"><div class="action-cluster"><button class="btn primary" id="free-strum" type="button">${icon("sound")}Ouvir acorde</button><button class="btn" id="free-arpeggio" type="button">${icon("play")}Arpejar</button><button class="btn" id="free-stop" type="button">${icon("stop")}Parar</button></div><button class="btn text" id="free-clear" type="button">Limpar seleção</button></div></section><div class="tip-strip">${icon("bulb")}<p><strong>Faça uma conexão.</strong> Escolha C maior no guia e alterne entre Notas e Graus. Encontre 1–3–5; depois 2–4–6. Você acabou de localizar C e Dm na mesma escala.</p></div>`;
+              )}</select></label><label class="field">Casas<select id="free-range"><option value="12" ${free.range === 12 ? "selected" : ""}>12</option><option value="24" ${free.range === 24 ? "selected" : ""}>24</option></select></label></div><section class="exercise-card free-card"><div class="question-header"><div><h2>Braço da guitarra</h2><p>Toque uma casa para ouvir e selecionar. Monte um acorde, ouça junto ou nota por nota.</p></div></div><div class="exercise-body"><div class="inline-controls"><label><input type="checkbox" id="free-show-all" ${free.showAll ? "checked" : ""}> Mostrar todas as posições</label><label><input type="checkbox" id="free-keep-marks" ${prefs.keepMarks ? "checked" : ""}> Manter marcações</label><span class="muted">${prefs.orientation === "tab" ? "1ª corda aguda em cima" : "6ª corda grave em cima"}</span></div><div id="board-host"></div><div class="board-caption"><span>Casas com a mesma largura dos exercícios</span><span>Deslize para ver até a casa ${free.range} →</span></div><div class="legend"><span><i class="root"></i> Tônica de ${freeRoot()}</span><span><i></i> Notas</span><span><i class="hollow"></i> Contorno: seleção</span></div><p class="guide-intro" id="free-marking-help">${prefs.keepMarks ? "Marque várias casas na mesma corda. Clique novamente para ouvir sem apagar; use o botão direito para remover cada marcação. Limpar seleção apaga todas de uma vez." : "Uma nota por corda. Clique de novo para remover ou use o botão direito."}</p><div class="selection-line" id="free-selection"></div><div class="feedback" id="free-chord-info" role="status" aria-live="polite"></div></div><div class="action-row"><div class="action-cluster"><button class="btn primary" id="free-strum" type="button">${icon("sound")}${prefs.keepMarks ? "Ouvir marcações" : "Ouvir acorde"}</button><button class="btn" id="free-arpeggio" type="button">${icon("play")}Arpejar</button><button class="btn" id="free-stop" type="button">${icon("stop")}Parar</button></div><button class="btn text" id="free-clear" type="button">Limpar seleção</button></div></section><div class="tip-strip">${icon("bulb")}<p><strong>Faça uma conexão.</strong> Escolha C maior no guia e alterne entre Notas e Graus. Encontre 1–3–5; depois 2–4–6. Você acabou de localizar C e Dm na mesma escala.</p></div>`;
           board = new Fretboard($("#board-host"), {
             last: free.range,
             describe: freeMarker,
@@ -3719,11 +3799,17 @@
           });
           $("#free-range").addEventListener("change", (e) => {
             free.range = Number(e.target.value);
-            free.selected = new Set(
-              [...free.selected].filter((k) => Number(k.split(":")[1]) <= free.range),
-            );
+            // Hidden marks remain selected when switching to 12 frets.
             audio.stop();
             renderFree();
+          });
+          $("#free-keep-marks").addEventListener("change", (e) => {
+            prefs.keepMarks = e.target.checked;
+            save();
+            const scrollLeft = board.scroll.scrollLeft;
+            renderFree();
+            board.scroll.scrollLeft = scrollLeft;
+            $("#free-keep-marks").focus({ preventScroll: true });
           });
           $("#free-show-all").addEventListener("change", (e) => {
             free.showAll = e.target.checked;
@@ -3795,6 +3881,14 @@
           soundUI();
           save();
         });
+        $("#guide-open").addEventListener("click", () => {
+          renderGuide();
+          $("#guide-dialog").showModal();
+        });
+        $("#guide-close").addEventListener("click", () => $("#guide-dialog").close());
+        $("#guide-content").addEventListener("click", (e) => {
+          if (e.target.closest("a[href]")) $("#guide-dialog").close();
+        });
         $("#settings-open").addEventListener("click", () => {
           $("#volume-setting").value = prefs.volume;
           $("#size-setting").value = prefs.size;
@@ -3831,7 +3925,7 @@
         $("#orientation-setting").addEventListener("change", (e) => {
           prefs.orientation = e.target.value;
           save();
-          if (board && route !== "inicio") {
+          if (board && route !== "inicio" && (route === "livre" || q?.kind.startsWith("board"))) {
             if (route === "livre") renderFree();
             else {
               board = new Fretboard($("#board-host"), {
