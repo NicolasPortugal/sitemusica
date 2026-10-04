@@ -784,6 +784,7 @@
         font-size: 12px;
         font-weight: 550;
         text-decoration: none;
+        transition: background 0.16s, color 0.16s, border-color 0.16s, box-shadow 0.16s, transform 0.16s;
       }
       .btn .icon {
         width: 16px;
@@ -794,22 +795,34 @@
       }
       .btn.primary {
         background: var(--accent);
-        border-color: var(--accent);
+        border-color: transparent;
         color: #191a1c;
       }
       .btn.primary:hover:not(:disabled) {
-        background: #e0c391;
+        border-color: transparent;
+        background: #e7ca98;
+        box-shadow: 0 3px 12px #00000030;
+        transform: translateY(-1px);
       }
+      .btn.primary:active:not(:disabled) {
+        background: #c5a66f;
+        box-shadow: none;
+        transform: translateY(0);
+      }
+      .btn.primary .shortcut { color: inherit; opacity: 0.65; }
       .btn.text {
         background: none;
         border-color: transparent;
         color: var(--muted);
         font-weight: 400;
-        padding: 10px 5px;
+        padding: 10px 12px;
       }
-      .btn.text:hover {
+      .btn.text:hover:not(:disabled) {
+        border-color: transparent;
+        background: #ffffff0b;
         color: var(--text);
       }
+      .btn.text:active:not(:disabled) { background: #ffffff12; }
       .shortcut {
         font-size: 10px;
         color: var(--quiet);
@@ -1771,23 +1784,63 @@
         width:100%; min-height:44px; background:var(--bg); color:var(--text);
         border:1px solid #4b4d52; border-radius:9px; padding:11px 12px; font-size:15px;
       }
-      .filter-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:-6px 0 18px; }
-      .filter-bar p { font-size:11px; color:var(--muted); line-height:1.5; }
-      .filter-trigger { min-height:42px; flex:none; }
+      .filter-bar {
+        display:flex; align-items:center; gap:14px; flex-basis:100%; min-width:0;
+        margin:2px 0 0; padding-top:14px; border-top:1px solid var(--line);
+      }
+      .filter-trigger { min-height:44px; flex:none; gap:8px; }
+      .filter-trigger[data-active=true] { background:#d4b68018; color:var(--accent); border-color:transparent; }
+      .filter-trigger[data-active=true]:hover { background:#d4b6802b; border-color:transparent; }
+      .filter-count { display:grid; place-items:center; min-width:21px; height:21px; padding:0 5px; border-radius:6px; background:#d4b68025; font-size:11px; }
+      .filter-overview { min-width:0; flex:1; display:flex; flex-direction:column; gap:5px; }
+      .filter-stats { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+      .filter-stat { display:inline-flex; gap:5px; align-items:baseline; background:#ffffff06; border-radius:6px; padding:3px 8px; font-size:11px; color:var(--muted); }
+      .filter-stat strong { font-size:14px; font-weight:600; color:var(--text); }
+      .filter-stat.active { color:var(--accent); background:var(--accent-bg); }
+      .filter-stat.active strong { color:inherit; }
+      .filter-summary { font-size:11px; color:var(--muted); line-height:1.6; overflow-wrap:anywhere; }
+      .filter-bar[data-active=true] .filter-summary { color:#d8c6a7; }
+      .filter-draft-summary { margin-top:12px; padding:10px 12px; border-radius:8px; background:#ffffff06; color:var(--text); font-size:12px; }
       .filter-section { border:0; padding:0; margin:20px 0; min-width:0; }
       .filter-section legend { font-size:13px; font-weight:600; margin-bottom:12px; color:var(--text); }
       .chip-row { display:flex; gap:8px; flex-wrap:wrap; }
       .filter-chip { min-height:43px; min-width:47px; padding:10px 13px; border:1px solid #46484c; border-radius:9px; background:#202226; font-size:13px; color:var(--muted); }
-      .filter-chip[aria-pressed=true] { background:#ded9cc; color:#191a1c; border-color:#ded9cc; }
+      .filter-chip { transition:background 0.15s, color 0.15s, border-color 0.15s; }
+      .filter-chip:hover:not(:disabled) { background:#303339; color:var(--text); border-color:#72757b; }
+      .filter-chip[aria-pressed=true] { background:#ded9cc; color:#191a1c; border-color:transparent; }
+      .filter-chip[aria-pressed=true]:hover { background:#eee8da; color:#191a1c; border-color:transparent; }
       .filter-chip:disabled { opacity:.3; cursor:default; }
       .filter-chip small { display:block; font-size:10px; margin-top:3px; }
       .note-filters { display:grid; grid-template-columns:repeat(6,1fr); gap:7px; }
       .string-filters { display:grid; grid-template-columns:repeat(6,1fr); gap:7px; }
       .string-filters .filter-chip { padding:8px 4px; min-width:0; }
       .filter-explanation { font-size:11px; line-height:1.6; color:var(--muted); margin:10px 0 12px; }
-      .switch-row { display:flex; justify-content:space-between; align-items:center; gap:20px; font-size:13px; padding:15px 0; border-top:1px solid var(--line); }
+      .switch-row, .toggle-control {
+        display:flex; align-items:center; gap:10px; cursor:pointer; border-radius:9px;
+        color:var(--muted); background:#ffffff04; transition:background 0.15s, color 0.15s;
+      }
+      .switch-row { justify-content:space-between; gap:20px; font-size:13px; padding:13px 12px; margin:8px 0; }
+      .toggle-control { padding:9px 12px; font-size:12px; min-height:42px; }
+      .switch-row:hover, .toggle-control:hover { background:#ffffff0d; color:var(--text); }
+      .switch-row:has(input:checked), .toggle-control:has(input:checked) { color:var(--text); }
+      .switch-row:has(input:focus-visible), .toggle-control:has(input:focus-visible) { background:#d4b68010; }
       .switch-row small { display:block; max-width:350px; line-height:1.6; font-size:11px; color:var(--muted); margin-top:5px; }
-      input[type=checkbox] { accent-color:var(--accent); width:18px; height:18px; flex:none; cursor:pointer; }
+      input[type=checkbox] {
+        appearance:none; -webkit-appearance:none; width:38px; height:22px; flex:none; margin:0;
+        cursor:pointer; position:relative; border:1px solid #565960; border-radius:20px; background:#34363b;
+        transition:background 0.15s, border-color 0.15s;
+      }
+      input[type=checkbox]::before {
+        content:''; position:absolute; width:14px; height:14px; left:3px; top:3px;
+        border-radius:50%; background:#d2d3d5; transition:transform 0.15s, background 0.15s;
+      }
+      input[type=checkbox]:checked { background:var(--accent); border-color:var(--accent); }
+      input[type=checkbox]:checked::before { transform:translateX(16px); background:#232428; }
+      input[type=checkbox]:disabled { opacity:0.4; cursor:default; }
+      @media (forced-colors:active) {
+        input[type=checkbox] { appearance:auto; -webkit-appearance:auto; width:22px; background:none; }
+        input[type=checkbox]::before { display:none; }
+      }
       .dialog-actions { display:flex; gap:8px; justify-content:flex-end; padding-top:14px; border-top:1px solid var(--line); position:sticky; bottom:-26px; background:var(--panel); }
       .filter-error { color:#eab1a8; font-size:12px; line-height:1.5; }
       #filters-dialog { width:min(590px,calc(100% - 24px)); }
@@ -1816,7 +1869,15 @@
       .marking-help { font-size:10px; color:var(--muted); line-height:1.6; margin:9px 0; }
       .selection-line { flex-wrap:wrap; overflow-wrap:anywhere; }
       .selection-note { font-size:11px; }
-      .auto-advance { font-size:11px; color:var(--muted); display:flex; align-items:center; gap:9px; margin:0 0 15px; }
+      .auto-controls { display:flex; align-items:center; flex-wrap:wrap; gap:10px 16px; margin:0 0 16px; }
+      .auto-advance { max-width:100%; }
+      .auto-delay { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted); }
+      .auto-delay input { width:72px; min-height:40px; padding:7px 8px; background:var(--bg); color:var(--text); border:1px solid #45474d; border-radius:7px; font-size:13px; }
+      .auto-delay input:disabled { opacity:0.4; }
+      .challenge-limit { font-size:11px; line-height:1.7; color:var(--muted); padding:10px 12px; margin-bottom:14px; border-radius:8px; background:#ffffff05; }
+      .empty-exercise { padding:28px; }
+      .empty-exercise h2 { font-size:22px; margin:10px 0; }
+      .empty-exercise p:last-child { color:var(--muted); font-size:13px; max-width:600px; line-height:1.8; }
       .guitar-practice { margin-top:20px; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
       .guitar-practice summary { cursor:pointer; font-size:14px; font-weight:500; }
       .practice-content { padding-top:16px; }
@@ -1863,7 +1924,11 @@
         .content:has(#exercise-select) .toolbar { grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); }
         .content:has(#exercise-select) .field.wide { grid-column:auto; }
         .select-trigger { font-size:12px; padding:10px; min-height:44px; }
-        .filter-bar { margin:0 2px 13px; }
+        .filter-bar { grid-column:1/-1; flex-wrap:wrap; margin:0; padding-top:12px; gap:10px; }
+        .filter-trigger { padding:10px 12px; font-size:11px; }
+        .filter-overview { flex:1 1 170px; }
+        .filter-stat { padding:3px 6px; font-size:10px; }
+        .filter-stat strong { font-size:13px; }
         .question-header { padding:18px 14px 12px; }
         .question-header h2 { font-size:22px; }
         .question-counter { font-size:9px; white-space:nowrap; }
@@ -1883,7 +1948,10 @@
         .feedback { margin-top:10px; font-size:12px; line-height:1.65; }
         .legend { margin-top:8px; gap:10px; font-size:9px; }
         .inline-controls { flex-wrap:wrap; gap:12px; }
-        .free-toggles { gap:16px; font-size:11px; }
+        .free-toggles { gap:8px; font-size:11px; }
+        .toggle-control { font-size:11px; padding:9px 10px; }
+        .auto-controls { gap:8px 12px; }
+        .empty-exercise { padding:20px 14px; }
         .selection-note { font-size:10px; }
         .guitar-practice { padding:16px 14px; }
         .interval-grid { grid-template-columns:1fr; }
@@ -2110,7 +2178,7 @@
           rel="noopener noreferrer"
           >CC BY 3.0</a
         >. Amostras E2–E6 incorporadas sem modificar os arquivos MP3. Volume e envelope são
-        ajustados durante a reprodução.<br /><br />Versão 2.0 · outubro de 2026 · sem anúncios,
+        ajustados durante a reprodução.<br /><br />Versão 3.1 · outubro de 2026 · sem anúncios,
         conta ou rastreamento.
       </p>
     </dialog>
@@ -2457,6 +2525,7 @@
           refresh: "M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12 0l2 5M4 12l2 5a7 7 0 0 0 12 0",
           undo: "M8 4 3 9l5 5M3 9h11a6 6 0 0 1 0 12",
           stop: "M6 6h12v12H6z",
+          filter: "M4 6h16M7 12h10M10 18h4",
         };
         const icon = (name) =>
           `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[name] || paths.board}"/></svg>`;
@@ -2575,11 +2644,11 @@
           return scaleMode==='minor'?Theory.minorKeys:Theory.majorKeys;
         }
         let filterDraft=null;
-        function openFilters() {filterDraft=structuredClone(currentFilter());renderFilters();$('#filters-dialog').showModal();}
+        function openFilters() {clearTimeout(autoNextTimer);filterDraft=structuredClone(currentFilter());renderFilters();$('#filters-dialog').showModal();}
         function renderFilters() {
           const oldFocus=document.activeElement,focusAttr=oldFocus?.getAttributeNames().find(n=>n.startsWith('data-')),focusValue=focusAttr?oldFocus.getAttribute(focusAttr):null,focusId=oldFocus?.id;
           const f=filterDraft,strings=['find','identify','buildChord'].includes(mode),chords=mode==='buildChord';
-          $('#filters-content').innerHTML=`<p class="guide-intro">${modes[mode]}. Escolha o que quer praticar; seus filtros ficam salvos para este exercício.</p>${chords?`<fieldset class="filter-section"><legend>Qualidades do acorde</legend><div class="chip-row">${[['major','Maiores'],['minor','Menores'],['dim','Diminutos']].map(([v,n])=>`<button class="filter-chip" type="button" data-filter-quality="${v}" aria-pressed="${f.qualities.includes(v)}">${n}</button>`).join('')}</div></fieldset>`:""}<fieldset class="filter-section"><legend>Notas ${['find','identify','buildChord'].includes(mode)?'pedidas':'da tônica'}</legend><div class="chip-row">${[['all','Todas'],['natural','Naturais'],['accidental','Com acidentes']].map(([v,n])=>`<button class="filter-chip" type="button" data-note-kind="${v}" aria-pressed="${f.noteKind===v}">${n}</button>`).join('')}</div><p class="filter-explanation">Naturais: C D E F G A B. Com acidentes: as outras cinco alturas. A grafia segue o contexto musical.</p><div class="note-filters">${rootNames(route==='escalas'?(prefs.scale==='pentaMinor'?'minor':'major'):prefs.mode,f).map((n,i)=>`<button class="filter-chip" type="button" data-filter-pitch="${i}" aria-pressed="${f.pitches.includes(i)}" ${f.noteKind!=='all' && (Theory.naturals.includes(i)!==(f.noteKind==='natural'))?'disabled':''}>${n}</button>`).join('')}</div><button class="btn text" id="filter-all-notes" type="button">Selecionar todas as notas</button></fieldset>${strings && !(chords&&f.caged)?`<fieldset class="filter-section"><legend>Cordas usadas</legend><div class="string-filters">${[0,1,2,3,4,5].map(s=>`<button class="filter-chip" type="button" data-filter-string="${s}" aria-pressed="${f.strings.includes(s)}"><strong>${6-s}ª</strong><small>${['E grave','A','D','G','B','e aguda'][s]}</small></button>`).join('')}</div><p class="filter-explanation">${chords?'Use ao menos três cordas para formar a tríade.':'Escolha uma ou mais cordas. As outras ficam desativadas no braço.'}</p></fieldset>`:''}${mode==='identify'?'<label class="switch-row"><span>Incluir cordas soltas<small>Desative para treinar apenas casas pressionadas.</small></span><input type="checkbox" id="filter-open" '+(f.open?'checked':'')+'></label>':''}${chords?`<label class="switch-row"><span>Pedir uma forma CAGED<small>Monte o desenho exato; Ver resposta mostra as posições.</small></span><input type="checkbox" id="filter-caged" ${f.caged?'checked':''}></label>${f.caged?`<div class="chip-row caged-filters">${[['all','Sortear'],...Theory.cagedNames.map((n,i)=>[i+1,n])].map(([v,n])=>`<button class="filter-chip" type="button" data-caged-shape="${v}" aria-pressed="${f.cagedShape===v}">${n}</button>`).join('')}</div><p class="filter-explanation">Formas menores rebaixam as terças. Para diminutos, também rebaixam as quintas. São adaptações do desenho CAGED.</p>`:''}`:''}<p id="filter-error" class="filter-error" role="status"></p>`;
+          $('#filters-content').innerHTML=`<p class="guide-intro">${modes[mode]}. Escolha o que quer praticar; seus filtros ficam salvos para este exercício.</p>${chords?`<fieldset class="filter-section"><legend>Qualidades do acorde</legend><div class="chip-row">${[['major','Maiores'],['minor','Menores'],['dim','Diminutos']].map(([v,n])=>`<button class="filter-chip" type="button" data-filter-quality="${v}" aria-pressed="${f.qualities.includes(v)}">${n}</button>`).join('')}</div></fieldset>`:""}<fieldset class="filter-section"><legend>Notas ${['find','identify','buildChord'].includes(mode)?'pedidas':'da tônica'}</legend><div class="chip-row">${[['all','Todas'],['natural','Naturais'],['accidental','Com acidentes']].map(([v,n])=>`<button class="filter-chip" type="button" data-note-kind="${v}" aria-pressed="${f.noteKind===v}">${n}</button>`).join('')}</div><p class="filter-explanation">Naturais: C D E F G A B. Com acidentes: as outras cinco alturas. A grafia segue o contexto musical.</p><div class="note-filters">${rootNames(route==='escalas'?(prefs.scale==='pentaMinor'?'minor':'major'):prefs.mode,f).map((n,i)=>`<button class="filter-chip" type="button" data-filter-pitch="${i}" aria-pressed="${f.pitches.includes(i)}" ${f.noteKind!=='all' && (Theory.naturals.includes(i)!==(f.noteKind==='natural'))?'disabled':''}>${n}</button>`).join('')}</div><button class="btn text" id="filter-all-notes" type="button">Selecionar todas as notas</button></fieldset>${strings && !(chords&&f.caged)?`<fieldset class="filter-section"><legend>Cordas usadas</legend><div class="string-filters">${[0,1,2,3,4,5].map(s=>`<button class="filter-chip" type="button" data-filter-string="${s}" aria-pressed="${f.strings.includes(s)}"><strong>${6-s}ª</strong><small>${['E grave','A','D','G','B','e aguda'][s]}</small></button>`).join('')}</div><p class="filter-explanation">${chords?'Use ao menos três cordas para formar a tríade.':'Escolha uma ou mais cordas. As outras ficam desativadas no braço.'}</p></fieldset>`:''}${mode==='identify'?'<label class="switch-row"><span>Incluir cordas soltas<small>Desative para treinar apenas casas pressionadas.</small></span><input type="checkbox" id="filter-open" '+(f.open?'checked':'')+'></label>':''}${chords?`<label class="switch-row"><span>Pedir uma forma CAGED<small>Monte o desenho exato; Ver resposta mostra as posições.</small></span><input type="checkbox" id="filter-caged" ${f.caged?'checked':''}></label>${f.caged?`<div class="chip-row caged-filters">${[['all','Sortear'],...Theory.cagedNames.map((n,i)=>[i+1,n])].map(([v,n])=>`<button class="filter-chip" type="button" data-caged-shape="${v}" aria-pressed="${f.cagedShape===v}">${n}</button>`).join('')}</div><p class="filter-explanation">Formas menores rebaixam as terças. Para diminutos, também rebaixam as quintas. São adaptações do desenho CAGED.</p>`:''}`:''}<p class="filter-draft-summary">${pitchPool(f).length} ${pitchPool(f).length===1?'nota disponível':'notas disponíveis'}${strings&&!(chords&&f.caged)?` · ${f.strings.length} ${f.strings.length===1?'corda':'cordas'}`:''} para este exercício.</p><p id="filter-error" class="filter-error" role="status"></p>`;
           $('#filters-content').querySelectorAll('[data-note-kind]').forEach(b=>b.addEventListener('click',()=>{f.noteKind=b.dataset.noteKind;if(!pitchPool(f).length)f.pitches=Array.from({length:12},(_,i)=>i);renderFilters();}));
           const toggle=(array,value)=>array.includes(value)?array.splice(array.indexOf(value),1):array.push(value);
           $('#filters-content').querySelectorAll('[data-filter-pitch]').forEach(b=>b.addEventListener('click',()=>{toggle(f.pitches,Number(b.dataset.filterPitch));renderFilters();}));
@@ -2592,17 +2661,36 @@
           if(focusAttr)$('#filters-content').querySelector(`[${focusAttr}="${focusValue}"]`)?.focus({preventScroll:true});
           else if(focusId)$('#'+focusId)?.focus({preventScroll:true});
         }
-        function filterSummary() {
-          const f=currentFilter(),pool=pitchPool(f),parts=[];
-          if(pool.length<12)parts.push(`${pool.length} ${pool.length===1?'nota':'notas'}`);
-          if(['find','identify','buildChord'].includes(mode)&&(!f.caged||mode!=='buildChord')&&f.strings.length<6)parts.push(`cordas ${f.strings.map(s=>6-s).sort((a,b)=>b-a).join(', ')}`);
-          if(mode==='identify'&&!f.open)parts.push('sem cordas soltas');
-          if(mode==='buildChord'){parts.push(f.qualities.map(v=>({major:'maior',minor:'menor',dim:'diminuto'})[v]).join(' + '));if(f.caged)parts.push(`CAGED ${f.cagedShape==='all'?'aleatório':Theory.cagedNames[f.cagedShape-1]}`);}
-          return parts.length?parts.join(' · '):'Todas as notas e cordas';
+        function filterState() {
+          const f=currentFilter(),pool=pitchPool(f),details=[];
+          const tonal=!['find','identify'].includes(mode);
+          const names=rootNames(route==='escalas'?(prefs.scale==='pentaMinor'?'minor':'major'):prefs.mode);
+          let count=0;
+          const add=label=>{count++;details.push(label);};
+          if(f.noteKind!=='all')add(f.noteKind==='natural'?'Só naturais':'Só notas com acidentes');
+          if(f.pitches.length<12)add(pool.map(p=>names[p]).join(' · '));
+          if(prefs.root!=='all'&&mode!=='identify')add(`${tonal?'Tônica':'Nota'} fixa: ${names[Number(prefs.root)]}`);
+          const usesStrings=['find','identify','buildChord'].includes(mode)&&!(mode==='buildChord'&&f.caged);
+          if(usesStrings&&f.strings.length<6)add(`Cordas ${f.strings.map(s=>6-s).sort((a,b)=>b-a).join(', ')}`);
+          if(mode==='identify'&&!f.open)add('Sem cordas soltas');
+          if(mode==='buildChord') {
+            if(f.qualities.length<3)add(f.qualities.map(v=>({major:'Maiores',minor:'Menores',dim:'Diminutos'})[v]).join(' + '));
+            if(f.caged)add(`Forma CAGED ${f.cagedShape==='all'?'aleatória':Theory.cagedNames[f.cagedShape-1]}`);
+          }
+          if((route==='escalas'||mode==='target')&&prefs.shape!=='all')add(`${route==='escalas'&&prefs.scale==='pentaMinor'?'Box':'Shape'} ${prefs.shape}`);
+          const noteCount=prefs.root!=='all'&&mode!=='identify'?1:pool.length;
+          return {count,details,noteCount,tonal,strings:usesStrings?f.strings.length:null};
+        }
+        function filterControls() {
+          if(mode==='degreeName')return '';
+          const state=filterState(),active=state.count>0;
+          const units=state.tonal?(state.noteCount===1?'tônica':'tônicas'):(state.noteCount===1?'nota':'notas');
+          const filterLabel=`${state.count} ${state.count===1?'filtro ativo':'filtros ativos'}`;
+          return `<div class="filter-bar" data-active="${active}"><button type="button" class="btn filter-trigger" id="filters-open" data-active="${active}" aria-haspopup="dialog" aria-controls="filters-dialog" aria-label="Editar filtros. ${filterLabel}">${icon('filter')}<span>${active?'Filtros ativos':'Filtros'}</span>${active?`<span class="filter-count" aria-hidden="true">${state.count}</span>`:''}</button><div class="filter-overview"><div class="filter-stats"><span class="filter-stat"><strong>${state.noteCount}</strong> ${units}</span>${state.strings!==null?`<span class="filter-stat"><strong>${state.strings}</strong> ${state.strings===1?'corda':'cordas'}</span>`:''}<span class="filter-stat ${active?'active':''}"><strong>${state.count}</strong> ${state.count===1?'filtro ativo':'filtros ativos'}</span></div><p class="filter-summary">${escape(state.details.length?state.details.join(' · '):'Conjunto completo disponível para este exercício.')}</p></div></div>`;
         }
         function exerciseControls() {
           const shapes=route==='escalas',harmony=route==='harmonia';
-          return `<div class="toolbar"><label class="field wide">Exercício<select id="exercise-select">${config[route].modes.map(m=>`<option value="${m}" ${m===mode?'selected':''}>${modes[m]}</option>`).join('')}</select></label>${!['identify','degreeName'].includes(mode)?`<label class="field">${mode==='find'?'Nota':'Tônica'}<select id="root-select">${rootOptions(prefs.root,shapes&&prefs.scale==='pentaMinor'?'minor':shapes?'major':prefs.mode)}</select></label>`:''}${harmony?`<label class="field">Escala<select id="mode-select">${modeOptions()}</select></label>`:''}${shapes?`<label class="field">Escala<select id="scale-select">${scaleOptions(prefs.scale)}</select></label>`:''}${shapes||mode==='target'?`<label class="field">${shapes&&prefs.scale==='pentaMinor'?'Box':'Shape'}<select id="shape-select"><option value="all" ${prefs.shape==='all'?'selected':''}>Aleatório</option>${Theory.cagedNames.map((n,i)=>`<option value="${i+1}" ${prefs.shape===i+1?'selected':''}>${i+1}${shapes&&prefs.scale==='pentaMinor'?'':' · '+n}</option>`).join('')}</select></label>`:''}</div>${mode!=='degreeName'?`<div class="filter-bar"><p>${escape(filterSummary())}</p><button type="button" class="btn filter-trigger" id="filters-open">${icon('settings')}Filtros</button></div>`:''}`;
+          return `<div class="toolbar"><label class="field wide">Exercício<select id="exercise-select">${config[route].modes.map(m=>`<option value="${m}" ${m===mode?'selected':''}>${modes[m]}</option>`).join('')}</select></label>${!['identify','degreeName'].includes(mode)?`<label class="field">${mode==='find'?'Nota':'Tônica'}<select id="root-select">${rootOptions(prefs.root,shapes&&prefs.scale==='pentaMinor'?'minor':shapes?'major':prefs.mode)}</select></label>`:''}${harmony?`<label class="field">Escala<select id="mode-select">${modeOptions()}</select></label>`:''}${shapes?`<label class="field">Escala<select id="scale-select">${scaleOptions(prefs.scale)}</select></label>`:''}${shapes||mode==='target'?`<label class="field">${shapes&&prefs.scale==='pentaMinor'?'Box':'Shape'}<select id="shape-select"><option value="all" ${prefs.shape==='all'?'selected':''}>Aleatório</option>${Theory.cagedNames.map((n,i)=>`<option value="${i+1}" ${prefs.shape===i+1?'selected':''}>${i+1}${shapes&&prefs.scale==='pentaMinor'?'':' · '+n}</option>`).join('')}</select></label>`:''}${filterControls()}</div>`;
         }
         let pickerSelect=null,pickerButton=null,pickerCounter=0;
         function upgradePickers(root=document) {
@@ -2666,6 +2754,7 @@
           shape: "all",
           sevenths: false,
           keepMarks: false,
+          autoNextDelay: 350,
         };
         let storageAvailable = true;
         function load() {
@@ -2699,6 +2788,7 @@
                 shape: [1, 2, 3, 4, 5].includes(p.shape) ? p.shape : "all",
                 sevenths: p.sevenths === true,
                 keepMarks: p.keepMarks === true,
+                autoNextDelay: Number.isFinite(p.autoNextDelay) ? Math.max(100,Math.min(5000,Math.round(p.autoNextDelay))) : defaults.autoNextDelay,
               },
               days:
                 raw.days && typeof raw.days === "object" && !Array.isArray(raw.days)
@@ -2807,12 +2897,6 @@
           );
           $("#sound-toggle").setAttribute("aria-pressed", String(prefs.sound));
         }
-        function rootFor(scaleMode=prefs.mode) {
-          const pool=pitchPool();
-          if(prefs.root!=='all'&&!pool.includes(Number(prefs.root)))prefs.root='all';
-          const pitch=prefs.root==='all'?pick(pool):Number(prefs.root);
-          return rootNames(scaleMode)[pitch];
-        }
         function scaleName(type) {
           return {
             major: "escala maior",
@@ -2851,6 +2935,22 @@
             icon(kind === "success" ? "check" : kind === "error" ? "close" : "bulb") +
             `<span>${escape(message)}</span>`;
         }
+        function scheduleAutoNext() {
+          clearTimeout(autoNextTimer);
+          const finished=q;
+          if(mode!=='find'||route!=='braco'||!finished?.solved||finished.revealed||!finished.canAdvance||!currentFilter().autoNext||document.hidden||$('dialog[open]'))return;
+          autoNextTimer=setTimeout(()=>{
+            if(q===finished&&route==='braco'&&mode==='find'&&currentFilter().autoNext&&!document.hidden&&!$('dialog[open]'))advanceQuestion();
+          },prefs.autoNextDelay);
+        }
+        function advanceQuestion() {
+          if(!q?.canAdvance) {
+            toast('Amplie as opções do exercício para continuar sem repetir o desafio.');
+            return;
+          }
+          audio.stop();
+          renderExercise();
+        }
         function complete(message) {
           if (q.solved) return;
           q.solved = true;
@@ -2858,11 +2958,8 @@
           feedback("success", message);
           if ($("#check-answer")) $("#check-answer").disabled = true;
           $$(".option").forEach((b) => (b.disabled = true));
-          if ($("#next-question")) $("#next-question").classList.add("primary");
-          if(mode==='find'&&currentFilter().autoNext&&!q.revealed) {
-            const finished=q;
-            autoNextTimer=setTimeout(()=>{if(q===finished&&route==='braco'&&mode==='find'&&currentFilter().autoNext){audio.stop();renderExercise();}},900);
-          }
+          if (q.canAdvance && $("#next-question")) $("#next-question").classList.add("primary");
+          scheduleAutoNext();
         }
         function wrong(message) {
           q.hadMistake = true;
@@ -3057,13 +3154,83 @@
             [0, 6, 5, 6],
           ],
         };
+        // Enumerate the permitted challenges once, then exclude the previous identity.
+        // No retry loop: even a deterministic random source cannot produce a repeat.
+        const lastChallenges=new Map();
+        function chooseChallenge() {
+          const filter=currentFilter(),pool=pitchPool(filter),variants=[];
+          if(prefs.root!=='all'&&!pool.includes(Number(prefs.root)))prefs.root='all';
+          const pitches=prefs.root==='all'?pool:[Number(prefs.root)];
+          const shapes=prefs.shape==='all'?[1,2,3,4,5]:[Number(prefs.shape)];
+          const degrees=[0,1,2,3,4,5,6];
+          const add=(data,identity)=>variants.push({...data,signature:JSON.stringify([mode,...identity])});
+          if(mode==='degreeName') {
+            for(const degree of degrees)add({degree,pitch:0},[prefs.mode,degree]);
+          }else if(mode==='identify') {
+            for(const s of filter.strings)for(let i=0;i<12;i++) {
+              const f=i+(filter.open?0:1),pitch=Theory.note(s,f);
+              if(pool.includes(pitch))add({pitch,position:{s,f}},[pitch]);
+            }
+          }else for(const pitch of pitches) {
+            const base={pitch};
+            if(mode==='find')add(base,[pitch]);
+            else if(['field','scaleDegree','degreeChord'].includes(mode)) {
+              for(const degree of degrees)add({...base,degree},[pitch,prefs.mode,degree]);
+            }else if(mode==='buildChord') {
+              for(const quality of filter.qualities)for(const cagedShape of filter.caged?(filter.cagedShape==='all'?[1,2,3,4,5]:[filter.cagedShape]):[null])
+                add({...base,quality,cagedShape},[pitch,quality,cagedShape]);
+            }else if(mode==='progression') {
+              const patterns=progressionSets[prefs.mode];
+              const choices=patternChoice==='random'?patterns:[patterns[Number(patternChoice)]||patterns[0]];
+              for(const pattern of choices)add({...base,pattern},[pitch,prefs.mode,pattern]);
+            }else if(mode==='intervals')add(base,[pitch,prefs.mode,prefs.sevenths]);
+            else if(mode==='formation') {
+              for(const formation of formationKind==='random'?['triad','scale','penta']:[formationKind])
+                add({...base,formation},[pitch,prefs.mode,formation]);
+            }else for(const shapeNum of shapes) {
+              const data={...base,shapeNum},identity=[pitch,prefs.scale,shapeNum];
+              if(mode==='target') {
+                for(const degree of degrees)for(const targetRole of [0,1,2])
+                  add({...data,degree,targetRole},[pitch,prefs.mode,shapeNum,degree,targetRole]);
+              }else if(mode==='shapeDegree') {
+                for(const interval of Theory.formula(prefs.scale).filter(n=>n!==0))
+                  add({...data,interval},[...identity,interval]);
+              }else if(mode==='intruder') {
+                const root=rootNames(prefs.scale==='pentaMinor'?'minor':'major')[pitch];
+                const shape=Theory.shape(root,prefs.scale,shapeNum);
+                const allowed=Theory.formula(prefs.scale).map(v=>Theory.mod(pitch+v));
+                for(const original of shape.points)for(const step of [-1,1]) {
+                  const wrong={s:original.s,f:original.f+step};
+                  if(wrong.f>=shape.min&&wrong.f<=shape.max&&!allowed.includes(Theory.note(wrong.s,wrong.f)))
+                    add({...data,intruder:{original,wrong}},[...identity,keyOf(original),keyOf(wrong)]);
+                }
+              }else add(data,identity);
+            }
+          }
+          const previous=lastChallenges.get(mode);
+          let available=variants.filter(v=>v.signature!==previous?.signature);
+          // Prefer a different note or tonic whenever the settings allow it.
+          if(previous&&mode!=='degreeName') {
+            const otherPitches=available.filter(v=>v.pitch!==previous.pitch);
+            if(otherPitches.length)available=otherPitches;
+          }
+          if(!available.length)return null;
+          const chosen=pick(available);
+          chosen.canAdvance=new Set(variants.map(v=>v.signature)).size>1;
+          return chosen;
+        }
         function makeQuestion() {
+          const challenge=chooseChallenge();
+          if(!challenge)return null;
           questionNumber++;
-          const filter=currentFilter(),chosenQuality=pick(filter.qualities);
-          const root = rootFor(mode==='buildChord'?(chosenQuality==='minor'?'minor':'major'):prefs.mode),
+          const filter=currentFilter(),chosenQuality=challenge.quality;
+          const scaleMode=route==='escalas'?(prefs.scale==='pentaMinor'?'minor':'major'):mode==='buildChord'?(chosenQuality==='minor'?'minor':'major'):prefs.mode;
+          const root = rootNames(scaleMode)[challenge.pitch],
             field = Theory.field(root, prefs.mode);
           const x = {
             key: root,
+            signature: challenge.signature,
+            canAdvance: challenge.canAdvance,
             scaleMode: prefs.mode,
             field,
             selected: new Set(),
@@ -3083,7 +3250,7 @@
             explanation: "",
             options: [],
           };
-          const degree = Math.floor(Math.random() * 7),
+          const degree = challenge.degree ?? 0,
             scale = Theory.scale(root, prefs.mode),
             keyTitle = `${root} ${prefs.mode === "major" ? "maior" : "menor natural"}`;
           const noteOptions = () =>
@@ -3105,11 +3272,7 @@
               chord: c,
             });
           } else if (mode === "progression") {
-            const patterns = progressionSets[prefs.mode],
-              pattern =
-                patternChoice === "random"
-                  ? pick(patterns)
-                  : patterns[Number(patternChoice)] || patterns[0];
+            const pattern = challenge.pattern;
             Object.assign(x, {
               kind: "sequence",
               progression: pattern,
@@ -3175,8 +3338,7 @@
               options: noteOptions(),
             });
           } else if (mode === "formation") {
-            const kind =
-              formationKind === "random" ? pick(["triad", "scale", "penta"]) : formationKind;
+            const kind = challenge.formation;
             const ints =
               kind === "triad"
                 ? prefs.mode === "major"
@@ -3223,8 +3385,7 @@
               for (let f = 0; f < 12; f++)
                 if (Theory.note(s, f) === n) x.expected.add(Theory.position(s, f));
           } else if (mode === "identify") {
-            const candidates=filter.strings.flatMap(s=>Array.from({length:12},(_,i)=>({s,f:i+(filter.open?0:1)}))).filter(p=>pitchPool(filter).includes(Theory.note(p.s,p.f)));
-            const {s,f}=pick(candidates),note=Theory.note(s,f);
+            const {s,f}=challenge.position,note=Theory.note(s,f);
             Object.assign(x, {
               kind: "boardChoice",
               last: 12,
@@ -3268,7 +3429,7 @@
             });
             if(mode==='buildChord')x.scaleMode=chosenQuality==='minor'?'minor':'major';
             if(mode==='buildChord'&&filter.caged) {
-              const shape=filter.cagedShape==='all'?pick([1,2,3,4,5]):filter.cagedShape;
+              const shape=challenge.cagedShape;
               x.caged=Theory.cagedChord(root,chosenQuality,shape);
               x.expected=new Set(x.caged.points.map(keyOf));
               x.activeStrings=x.caged.points.map(p=>p.s);
@@ -3280,9 +3441,8 @@
             }
           } else {
             const type = prefs.scale,
-              shapeNum =
-                prefs.shape === "all" ? 1 + Math.floor(Math.random() * 5) : Number(prefs.shape);
-            x.key = rootFor(type === "pentaMinor" ? "minor" : "major");
+              shapeNum = challenge.shapeNum;
+            x.key = root;
             x.scaleMode = type === "pentaMinor" ? "minor" : "major";
             x.shape = Theory.shape(x.key, type, shapeNum);
             x.region = [x.shape.min, x.shape.max];
@@ -3300,7 +3460,7 @@
               });
             } else if (mode === "shapeDegree" || mode === "roots") {
               const interval =
-                mode === "roots" ? 0 : pick(Theory.formula(type).filter((n) => n !== 0));
+                mode === "roots" ? 0 : challenge.interval;
               x.targetPc = Theory.mod(Theory.pc(x.key) + interval);
               x.shown = new Set(x.shape.points.map(keyOf));
               x.expected = new Set(
@@ -3316,18 +3476,7 @@
                 explanation: `${Theory.nameFor(x.key, x.targetPc, x.scaleMode)} é ${mode === "roots" ? "a tônica" : "o grau " + Theory.degreeLabel(x.key, x.targetPc)} de ${x.key}.`,
               });
             } else if (mode === "intruder") {
-              const allowed = Theory.formula(type).map((v) => Theory.mod(Theory.pc(x.key) + v));
-              const candidates = x.shape.points
-                .flatMap((p) =>
-                  [-1, 1].map((step) => ({ original: p, wrong: { s: p.s, f: p.f + step } })),
-                )
-                .filter(
-                  (c) =>
-                    c.wrong.f >= x.shape.min &&
-                    c.wrong.f <= x.shape.max &&
-                    !allowed.includes(Theory.note(c.wrong.s, c.wrong.f)),
-                );
-              const intruder = pick(candidates);
+              const intruder = challenge.intruder;
               x.intruder = keyOf(intruder.wrong);
               x.original = keyOf(intruder.original);
               x.shown = new Set(x.shape.points.map(keyOf).filter((k) => k !== x.original));
@@ -3361,7 +3510,7 @@
               x.scaleMode = prefs.mode;
               x.field = field;
               x.chord = field[degree];
-              x.targetRole = pick([0, 1, 2]);
+              x.targetRole = challenge.targetRole;
               const relative = prefs.mode === "minor" ? scale[2] : root;
               x.shape = Theory.shape(relative, "major", shapeNum);
               x.region = [x.shape.min, x.shape.max];
@@ -3380,17 +3529,25 @@
               });
             }
           }
+          lastChallenges.set(mode,{signature:challenge.signature,pitch:challenge.pitch});
           return x;
         }
         function renderExercise() {
           clearTimeout(autoNextTimer);
           q = makeQuestion();
           board = null;
+          if(!q) {
+            $("#page").innerHTML=pageHeading(config[route].title,config[route].subtitle)+exerciseControls()+`<section class="exercise-card"><div class="empty-exercise"><p class="eyebrow">${modes[mode]}</p><h2>Nenhum desafio novo com estes ajustes.</h2><p>As opções atuais só permitem repetir o desafio anterior. Escolha outra nota, use Aleatório ou amplie os filtros para continuar.</p></div><div class="action-row"><button type="button" class="btn primary" id="expand-challenges">Restaurar opções do exercício ${icon('refresh')}</button></div></section>`;
+            bindExerciseControls();
+            $('#expand-challenges').addEventListener('click',()=>{prefs.root='all';prefs.shape='all';prefs.filters[mode]=normalizeFilter();patternChoice='random';formationKind='random';save();renderExercise();});
+            upgradePickers();
+            return;
+          }
           const multi = ["multi", "boardMulti", "sequence", "intervals"].includes(q.kind);
           $("#page").innerHTML =
             pageHeading(config[route].title, config[route].subtitle) +
             exerciseControls() +
-            `<section class="exercise-card"><div class="question-header"><div><p class="eyebrow">${modes[mode]}</p><h2 id="question-title">${escape(q.title)}</h2><p id="question-help">${escape(q.help)}</p></div><span class="question-counter">Desafio ${String(questionNumber).padStart(2, "0")}</span></div><div class="exercise-body">${mode==='find'?`<label class="auto-advance"><input type="checkbox" id="find-auto-next" ${currentFilter().autoNext?'checked':''}> Próximo automaticamente ao concluir</label>`:''}${mode === "intervals" ? `<div class="inline-controls"><label><input id="sevenths-setting" type="checkbox" ${prefs.sevenths ? "checked" : ""}> Incluir a sétima</label></div>` : ""}${
+            `<section class="exercise-card"><div class="question-header"><div><p class="eyebrow">${modes[mode]}</p><h2 id="question-title">${escape(q.title)}</h2><p id="question-help">${escape(q.help)}</p></div><span class="question-counter">Desafio ${String(questionNumber).padStart(2, "0")}</span></div><div class="exercise-body">${!q.canAdvance?'<p class="challenge-limit" role="status">Seus ajustes permitem só um desafio. Para avançar sem repetir, escolha Aleatório ou amplie as opções do exercício.</p>':''}${mode==='find'?`<div class="auto-controls"><label class="auto-advance toggle-control"><input type="checkbox" id="find-auto-next" ${currentFilter().autoNext?'checked':''}><span>Avançar ao concluir</span></label><label class="auto-delay" for="find-auto-delay">Após <input type="number" id="find-auto-delay" min="0.1" max="5" step="0.05" value="${prefs.autoNextDelay/1000}" inputmode="decimal" aria-label="Tempo para avançar, em segundos" ${!currentFilter().autoNext||!q.canAdvance?'disabled':''}> s</label></div>`:''}${mode === "intervals" ? `<div class="inline-controls"><label class="toggle-control"><input id="sevenths-setting" type="checkbox" ${prefs.sevenths ? "checked" : ""}> Incluir a sétima</label></div>` : ""}${
               mode === "formation"
                 ? `<div class="inline-controls"><label>Formação <select id="formation-kind">${[
                     ["random", "Misturar"],
@@ -3404,9 +3561,56 @@
                     )
                     .join("")}</select></label></div>`
                 : ""
-            }${mode === "progression" ? `<div class="inline-controls"><label>Progressão <select id="pattern-choice"><option value="random">Aleatória</option>${progressionSets[prefs.mode].map((p, i) => `<option value="${i}" ${String(i) === patternChoice ? "selected" : ""}>${p.map((d) => q.field[d].roman).join(" – ")}</option>`).join("")}</select></label></div><div id="sequence" class="sequence" aria-label="Acordes da progressão"></div>` : ""}${q.kind.startsWith("board") ? `<div id="board-host"></div><div class="board-caption"><span>${prefs.orientation === "tab" ? "1ª corda (aguda) em cima · 6ª (grave) embaixo" : "6ª corda (grave) em cima · 1ª (aguda) embaixo"}</span><span>Casas com largura fixa · deslize para explorar</span></div><div class="legend"><span><i class="root"></i> ${mode === "identify" ? "Posição a identificar" : "Tônica / seleção"}</span><span><i class="hollow"></i> ${route === "escalas" || mode === "target" ? "Posições do shape" : "Uma nota por casa"}</span></div>` : ""}${q.kind === "intervals" ? `<div class="interval-grid">${q.intervals.map((v, i) => `<label class="field">${v.label}<select class="interval-answer" data-index="${i}"><option value="">Selecione</option>${q.options.map((o) => `<option value="${o.id}">${o.label}</option>`).join("")}</select></label>`).join("")}</div>` : ""}${q.options.length && q.kind !== "intervals" ? '<div id="options" class="options"></div>' : ""}${["boardMulti", "multi"].includes(q.kind) ? '<div id="selection-summary" class="selection-line"></div>' : ""}<div id="feedback" class="feedback" role="status" aria-live="polite"></div><div id="solution"></div></div><div class="action-row"><div class="action-cluster">${multi ? `<button class="btn primary" id="check-answer" type="button">${icon("check")}Verificar</button>` : ""}${q.kind === "sequence" ? `<button class="btn" id="undo-answer" type="button">${icon("undo")}Desfazer</button>` : ""}${q.chord || q.audioNote || q.kind === "sequence" ? `<button class="btn" id="listen-answer" type="button">${icon("sound")}${q.kind === "sequence" ? "Ouvir sequência" : q.audioNote ? "Ouvir nota" : "Ouvir acorde"}</button>` : ""}<button class="btn ${multi ? "" : "primary"}" id="next-question" type="button">Próximo ${icon("arrow")}<span class="shortcut">N</span></button></div><div class="action-cluster"><button class="btn text" id="hint-button" type="button">Dica</button><button class="btn text" id="reveal-button" type="button">Ver resposta</button></div></div></section><details class="lesson-note"><summary>Como aproveitar este treino</summary><p>${lessonText()}</p></details>`;
+            }${mode === "progression" ? `<div class="inline-controls"><label>Progressão <select id="pattern-choice"><option value="random">Aleatória</option>${progressionSets[prefs.mode].map((p, i) => `<option value="${i}" ${String(i) === patternChoice ? "selected" : ""}>${p.map((d) => q.field[d].roman).join(" – ")}</option>`).join("")}</select></label></div><div id="sequence" class="sequence" aria-label="Acordes da progressão"></div>` : ""}${q.kind.startsWith("board") ? `<div id="board-host"></div><div class="board-caption"><span>${prefs.orientation === "tab" ? "1ª corda (aguda) em cima · 6ª (grave) embaixo" : "6ª corda (grave) em cima · 1ª (aguda) embaixo"}</span><span>Casas com largura fixa · deslize para explorar</span></div><div class="legend"><span><i class="root"></i> ${mode === "identify" ? "Posição a identificar" : "Tônica / seleção"}</span><span><i class="hollow"></i> ${route === "escalas" || mode === "target" ? "Posições do shape" : "Uma nota por casa"}</span></div>` : ""}${q.kind === "intervals" ? `<div class="interval-grid">${q.intervals.map((v, i) => `<label class="field">${v.label}<select class="interval-answer" data-index="${i}"><option value="">Selecione</option>${q.options.map((o) => `<option value="${o.id}">${o.label}</option>`).join("")}</select></label>`).join("")}</div>` : ""}${q.options.length && q.kind !== "intervals" ? '<div id="options" class="options"></div>' : ""}${["boardMulti", "multi"].includes(q.kind) ? '<div id="selection-summary" class="selection-line"></div>' : ""}<div id="feedback" class="feedback" role="status" aria-live="polite"></div><div id="solution"></div></div><div class="action-row"><div class="action-cluster">${multi ? `<button class="btn primary" id="check-answer" type="button">${icon("check")}Verificar</button>` : ""}${q.kind === "sequence" ? `<button class="btn" id="undo-answer" type="button">${icon("undo")}Desfazer</button>` : ""}${q.chord || q.audioNote || q.kind === "sequence" ? `<button class="btn" id="listen-answer" type="button">${icon("sound")}${q.kind === "sequence" ? "Ouvir sequência" : q.audioNote ? "Ouvir nota" : "Ouvir acorde"}</button>` : ""}<button class="btn ${multi ? "" : "primary"}" id="next-question" type="button" ${!q.canAdvance?'disabled title="Amplie as opções para continuar sem repetir"':''}>Próximo ${icon("arrow")}<span class="shortcut">N</span></button></div><div class="action-cluster"><button class="btn text" id="hint-button" type="button">Dica</button><button class="btn text" id="reveal-button" type="button">Ver resposta</button></div></div></section><details class="lesson-note"><summary>Como aproveitar este treino</summary><p>${lessonText()}</p></details>`;
+          bindExerciseControls();
+          if (q.kind.startsWith("board")) {
+            board = new Fretboard($("#board-host"), {
+              last: q.last,
+              onPick: boardPick,
+              describe: describeExercise,
+              region: q.region || q.focusRegion,
+              activeStrings: q.activeStrings,
+            });
+            if (q.region || q.focusRegion) board.showRegion(...(q.region || q.focusRegion));
+          }
+          if ($("#options")) drawOptions();
+          if (q.kind === "sequence") drawSequence();
+          if ($("#selection-summary")) selectionSummary();
+          feedback(
+            "neutral",
+            q.kind === "sequence"
+              ? "Selecione o primeiro acorde da sequência."
+              : q.kind === "multi" || q.kind === "boardMulti"
+                ? "Faça sua seleção e clique em Verificar."
+                : "Seu tempo, seu ritmo. Pode começar.",
+          );
+          $("#next-question").addEventListener("click", advanceQuestion);
+          $("#check-answer")?.addEventListener("click", checkAnswer);
+          $("#undo-answer")?.addEventListener("click", () => {
+            if (q.solved) return;
+            q.sequence.pop();
+            drawSequence();
+            drawOptions();
+            feedback("neutral", "Último acorde removido. Escolha novamente.");
+          });
+          $("#listen-answer")?.addEventListener("click", listenQuestion);
+          $("#hint-button").addEventListener("click", () => feedback("hint", q.hint));
+          $("#reveal-button").addEventListener("click", revealAnswer);
+          upgradePickers();
+        }
+        function bindExerciseControls() {
           $('#filters-open')?.addEventListener('click',openFilters);
-          $('#find-auto-next')?.addEventListener('change',e=>{const f=currentFilter();f.autoNext=e.target.checked;prefs.filters[mode]=f;save();if(!f.autoNext)clearTimeout(autoNextTimer);});
+          $('#find-auto-next')?.addEventListener('change',e=>{
+            const f=currentFilter();f.autoNext=e.target.checked;prefs.filters[mode]=f;
+            $('#find-auto-delay').disabled=!f.autoNext||!q?.canAdvance;
+            save();scheduleAutoNext();
+          });
+          $('#find-auto-delay')?.addEventListener('change',e=>{
+            const seconds=e.target.value.trim()===''?NaN:Number(e.target.value);
+            if(Number.isFinite(seconds))prefs.autoNextDelay=Math.max(100,Math.min(5000,Math.round(seconds*1000)));
+            e.target.value=String(prefs.autoNextDelay/1000);
+            save();scheduleAutoNext();
+          });
           $("#exercise-select").addEventListener("change", (e) => {
             location.hash = `${route}/${e.target.value}`;
           });
@@ -3438,43 +3642,6 @@
             save();
             renderExercise();
           });
-          if (q.kind.startsWith("board")) {
-            board = new Fretboard($("#board-host"), {
-              last: q.last,
-              onPick: boardPick,
-              describe: describeExercise,
-              region: q.region || q.focusRegion,
-              activeStrings: q.activeStrings,
-            });
-            if (q.region || q.focusRegion) board.showRegion(...(q.region || q.focusRegion));
-          }
-          if ($("#options")) drawOptions();
-          if (q.kind === "sequence") drawSequence();
-          if ($("#selection-summary")) selectionSummary();
-          feedback(
-            "neutral",
-            q.kind === "sequence"
-              ? "Selecione o primeiro acorde da sequência."
-              : q.kind === "multi" || q.kind === "boardMulti"
-                ? "Faça sua seleção e clique em Verificar."
-                : "Seu tempo, seu ritmo. Pode começar.",
-          );
-          $("#next-question").addEventListener("click", () => {
-            audio.stop();
-            renderExercise();
-          });
-          $("#check-answer")?.addEventListener("click", checkAnswer);
-          $("#undo-answer")?.addEventListener("click", () => {
-            if (q.solved) return;
-            q.sequence.pop();
-            drawSequence();
-            drawOptions();
-            feedback("neutral", "Último acorde removido. Escolha novamente.");
-          });
-          $("#listen-answer")?.addEventListener("click", listenQuestion);
-          $("#hint-button").addEventListener("click", () => feedback("hint", q.hint));
-          $("#reveal-button").addEventListener("click", revealAnswer);
-          upgradePickers();
         }
         function lessonText() {
           if (mode === "degreeName")
@@ -3958,7 +4125,7 @@
           const shape=free.overlay!=='none'&&free.shape!=='all'?Theory.shape(freeRoot(),free.type,Number(free.shape)):null;
           free.shapePoints=new Set(shape?shape.points.map(keyOf):[]);
           if(shape)free.range=Math.max(free.range,shape.max>12?24:12);
-          $('#page').innerHTML=pageHeading(config.livre.title,config.livre.subtitle)+`<div class="toolbar"><label class="field wide">Guia visual<select id="free-overlay"><option value="none" ${free.overlay==='none'?'selected':''}>Braço livre</option>${['major','pentaMajor','pentaMinor'].map(t=>`<option value="${t}" ${free.overlay===t?'selected':''}>${scaleName(t).replace(/^./,c=>c.toUpperCase())}</option>`).join('')}</select></label><label class="field">Tônica<select id="free-root"><option value="none" ${!free.context?'selected':''}>Sem tonalidade</option>${rootOptions(free.context?free.root:'none',free.type==='pentaMinor'?'minor':'major',false)}</select></label><label class="field">Acidentes<select id="free-accidentals">${[['auto','Automático'],['sharps','♯ Sustenidos'],['flats','♭ Bemóis']].map(([v,n])=>`<option value="${v}" ${prefs.freeAccidentals===v?'selected':''}>${n}</option>`).join('')}</select></label><label class="field">Marcadores<select id="free-labels">${[['notes','Notas'],['degrees','Graus'],['none','Sem nomes']].map(([v,n])=>`<option value="${v}" ${free.labels===v?'selected':''}>${n}</option>`).join('')}</select></label>${free.overlay!=='none'?`<label class="field">${free.type==='pentaMinor'?'Box':'Shape'}<select id="free-shape"><option value="all" ${free.shape==='all'?'selected':''}>Braço inteiro</option>${Theory.cagedNames.map((n,i)=>`<option value="${i+1}" ${free.shape===i+1?'selected':''}>${i+1}${free.type==='pentaMinor'?'':' · '+n}</option>`).join('')}</select></label>`:''}<label class="field">Casas<select id="free-range"><option value="12" ${free.range===12?'selected':''}>12</option><option value="24" ${free.range===24?'selected':''}>24</option></select></label></div><section class="exercise-card free-card"><div class="question-header"><div><h2>${shape?shape.label+' de '+freeRoot():'Braço da guitarra'}</h2><p>${free.context?`${freeRoot()} · ${free.type==='pentaMinor'?'menor natural':'maior'}${prefs.freeAccidentals==='auto'?' · grafia do tom':' · exibição '+(prefs.freeAccidentals==='sharps'?'em sustenidos':'em bemóis')}`:'Sem tonalidade · sustenidos no modo automático'}</p></div></div><div class="exercise-body"><div class="inline-controls free-toggles"><label><input id="free-show-all" type="checkbox" ${free.showAll?'checked':''}> Mostrar todas</label><label><input id="free-keep-marks" type="checkbox" ${prefs.keepMarks?'checked':''}> Manter marcações</label></div><div id="board-host"></div><div class="board-caption"><span>${prefs.orientation==='tab'?'1ª aguda em cima':'6ª grave em cima'}</span><span>${prefs.direction==='rtl'?'Casas da direita para a esquerda':'Casas da esquerda para a direita'}</span></div><p class="marking-help" id="free-marking-help">${prefs.keepMarks?'No celular, toque novamente para apagar. No computador, o clique mantém a marca; o botão direito apaga.':'Toque de novo na posição para apagar.'}</p><div class="selection-line" id="free-selection"></div><div class="feedback" id="free-chord-info" role="status" aria-live="polite"></div></div><div class="action-row"><div class="action-cluster"><button type="button" class="btn primary" id="free-strum">${icon('sound')}${prefs.keepMarks?'Ouvir marcas':'Ouvir acorde'}</button><button type="button" class="btn" id="free-arpeggio">${icon('play')}Arpejar</button><button type="button" class="btn" id="free-stop">${icon('stop')}Parar</button></div><button class="btn text" type="button" id="free-clear">Limpar</button></div></section><details class="guitar-practice"><summary>Com a guitarra · metrônomo e prática</summary><div class="practice-content"><p>Escolha um guia e um shape acima para acompanhar no instrumento. Comece devagar e diga os graus enquanto toca.</p><div class="metro-controls"><label class="field">BPM<input id="metro-bpm" type="number" min="40" max="240" value="${prefs.metroBpm}" inputmode="numeric"></label><button type="button" class="btn primary" id="metro-start">${icon('play')}Iniciar</button><button type="button" class="btn" id="metro-tap">Marcar tempo</button><div id="metro-beats" aria-label="Compasso de quatro tempos">${[0,1,2,3].map(i=>`<span data-beat="${i}">${i+1}</span>`).join('')}</div></div><ol class="practice-steps"><li>Toque o desenho subindo e descendo, uma nota por pulso.</li><li>Use o marcador Graus e toque só 1–3–5, depois 2–4–6.</li><li>Mude para a região vizinha e mantenha a mesma tônica.</li></ol><p class="guide-intro">O primeiro pulso é acentuado. Os desenhos são um mapa de estudo; escolha uma digitação confortável no instrumento.</p></div></details>`;
+          $('#page').innerHTML=pageHeading(config.livre.title,config.livre.subtitle)+`<div class="toolbar"><label class="field wide">Guia visual<select id="free-overlay"><option value="none" ${free.overlay==='none'?'selected':''}>Braço livre</option>${['major','pentaMajor','pentaMinor'].map(t=>`<option value="${t}" ${free.overlay===t?'selected':''}>${scaleName(t).replace(/^./,c=>c.toUpperCase())}</option>`).join('')}</select></label><label class="field">Tônica<select id="free-root"><option value="none" ${!free.context?'selected':''}>Sem tonalidade</option>${rootOptions(free.context?free.root:'none',free.type==='pentaMinor'?'minor':'major',false)}</select></label><label class="field">Acidentes<select id="free-accidentals">${[['auto','Automático'],['sharps','♯ Sustenidos'],['flats','♭ Bemóis']].map(([v,n])=>`<option value="${v}" ${prefs.freeAccidentals===v?'selected':''}>${n}</option>`).join('')}</select></label><label class="field">Marcadores<select id="free-labels">${[['notes','Notas'],['degrees','Graus'],['none','Sem nomes']].map(([v,n])=>`<option value="${v}" ${free.labels===v?'selected':''}>${n}</option>`).join('')}</select></label>${free.overlay!=='none'?`<label class="field">${free.type==='pentaMinor'?'Box':'Shape'}<select id="free-shape"><option value="all" ${free.shape==='all'?'selected':''}>Braço inteiro</option>${Theory.cagedNames.map((n,i)=>`<option value="${i+1}" ${free.shape===i+1?'selected':''}>${i+1}${free.type==='pentaMinor'?'':' · '+n}</option>`).join('')}</select></label>`:''}<label class="field">Casas<select id="free-range"><option value="12" ${free.range===12?'selected':''}>12</option><option value="24" ${free.range===24?'selected':''}>24</option></select></label></div><section class="exercise-card free-card"><div class="question-header"><div><h2>${shape?shape.label+' de '+freeRoot():'Braço da guitarra'}</h2><p>${free.context?`${freeRoot()} · ${free.type==='pentaMinor'?'menor natural':'maior'}${prefs.freeAccidentals==='auto'?' · grafia do tom':' · exibição '+(prefs.freeAccidentals==='sharps'?'em sustenidos':'em bemóis')}`:'Sem tonalidade · sustenidos no modo automático'}</p></div></div><div class="exercise-body"><div class="inline-controls free-toggles"><label class="toggle-control"><input id="free-show-all" type="checkbox" ${free.showAll?'checked':''}> Mostrar todas</label><label class="toggle-control"><input id="free-keep-marks" type="checkbox" ${prefs.keepMarks?'checked':''}> Manter marcações</label></div><div id="board-host"></div><div class="board-caption"><span>${prefs.orientation==='tab'?'1ª aguda em cima':'6ª grave em cima'}</span><span>${prefs.direction==='rtl'?'Casas da direita para a esquerda':'Casas da esquerda para a direita'}</span></div><p class="marking-help" id="free-marking-help">${prefs.keepMarks?'No celular, toque novamente para apagar. No computador, o clique mantém a marca; o botão direito apaga.':'Toque de novo na posição para apagar.'}</p><div class="selection-line" id="free-selection"></div><div class="feedback" id="free-chord-info" role="status" aria-live="polite"></div></div><div class="action-row"><div class="action-cluster"><button type="button" class="btn primary" id="free-strum">${icon('sound')}${prefs.keepMarks?'Ouvir marcas':'Ouvir acorde'}</button><button type="button" class="btn" id="free-arpeggio">${icon('play')}Arpejar</button><button type="button" class="btn" id="free-stop">${icon('stop')}Parar</button></div><button class="btn text" type="button" id="free-clear">Limpar</button></div></section><details class="guitar-practice"><summary>Com a guitarra · metrônomo e prática</summary><div class="practice-content"><p>Escolha um guia e um shape acima para acompanhar no instrumento. Comece devagar e diga os graus enquanto toca.</p><div class="metro-controls"><label class="field">BPM<input id="metro-bpm" type="number" min="40" max="240" value="${prefs.metroBpm}" inputmode="numeric"></label><button type="button" class="btn primary" id="metro-start">${icon('play')}Iniciar</button><button type="button" class="btn" id="metro-tap">Marcar tempo</button><div id="metro-beats" aria-label="Compasso de quatro tempos">${[0,1,2,3].map(i=>`<span data-beat="${i}">${i+1}</span>`).join('')}</div></div><ol class="practice-steps"><li>Toque o desenho subindo e descendo, uma nota por pulso.</li><li>Use o marcador Graus e toque só 1–3–5, depois 2–4–6.</li><li>Mude para a região vizinha e mantenha a mesma tônica.</li></ol><p class="guide-intro">O primeiro pulso é acentuado. Os desenhos são um mapa de estudo; escolha uma digitação confortável no instrumento.</p></div></details>`;
           board=new Fretboard($('#board-host'),{last:free.range,region:shape?[shape.min,shape.max]:null,describe:freeMarker,onPick:freePick,onRemove:(s,f)=>{free.selected.delete(Theory.position(s,f));board.update();freeSummary();}});
           if(shape)board.showRegion(shape.min,shape.max);
           freeSummary();
@@ -4181,8 +4348,7 @@
           if(e.key==='Escape'&&document.body.classList.contains('practice-focus')){document.body.classList.remove('practice-focus');$$('.screen-focus').forEach(b=>b.textContent='Tela de treino');}
           if (e.key.toLowerCase() === "n" && q) {
             e.preventDefault();
-            audio.stop();
-            renderExercise();
+            advanceQuestion();
           }
           if (/^[1-9]$/.test(e.key) && q) {
             const button = $$(".option")[Number(e.key) - 1];
@@ -4197,10 +4363,12 @@
           $("#main").focus();
         });
         window.addEventListener("hashchange", () => navigate());
+        $$('dialog').forEach(dialog=>dialog.addEventListener('close',scheduleAutoNext));
         document.addEventListener("visibilitychange", () => {
-          if (document.hidden) audio.stop();
+          if (document.hidden) { clearTimeout(autoNextTimer); audio.stop(); }
+          else scheduleAutoNext();
         });
-        window.addEventListener("pagehide", () => audio.stop());
+        window.addEventListener("pagehide", () => { clearTimeout(autoNextTimer); audio.stop(); });
         window.addEventListener("focus", () => {
           refreshStats();
           if (route === "inicio") renderHome();
