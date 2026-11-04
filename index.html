@@ -2005,7 +2005,7 @@
       }
 
       /* Keep the working area within a short laptop viewport. */
-      @media (min-width:851px) and (max-height:900px) {
+      @media (min-width:851px) and (max-height:1000px) {
         .topbar { height:48px; }
         .content { padding:18px 24px; }
         .page-heading { margin-bottom:14px; }
@@ -4387,7 +4387,7 @@
         $('#picker-search').addEventListener('input',drawPicker);
         $('#picker-dialog').addEventListener('close',()=>{if(pickerButton?.isConnected)pickerButton.focus({preventScroll:true});});
         $('#picker-dialog').addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp'].includes(e.key)){const list=$$('#picker-options button:not(:disabled)'),i=list.indexOf(document.activeElement),next=e.key==='ArrowDown'?Math.min(list.length-1,i+1):Math.max(0,i-1);list[next]?.focus();e.preventDefault();}});
-        document.addEventListener('click',e=>{if(e.target.closest('.screen-focus')){document.body.classList.toggle('practice-focus');board?.render();$('.screen-focus')?.focus({preventScroll:true});}});
+        document.addEventListener('click',e=>{if(e.target.closest('.screen-focus')){document.body.classList.toggle('practice-focus');window.scrollTo({top:0,behavior:'instant'});board?.render();$('.screen-focus')?.focus({preventScroll:true});}});
         let boardViewportWidth=innerWidth;
         window.addEventListener('resize',()=>{if(innerWidth===boardViewportWidth)return;boardViewportWidth=innerWidth;if(board&&$('#board-host')){const active=document.activeElement;refreshBoardLayout();if(active?.dataset?.string){const cell=board.cells.get(Theory.position(Number(active.dataset.string),Number(active.dataset.fret)));if(cell)board.focusCell(cell,true);}}});
         $("#export-progress").addEventListener("click", () => {
