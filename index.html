@@ -2004,6 +2004,79 @@
         body.practice-focus .feedback { border-top:0; padding-top:0; }
       }
 
+      /* Keep the working area within a short laptop viewport. */
+      @media (min-width:851px) and (max-height:900px) {
+        .topbar { height:48px; }
+        .content { padding:18px 24px; }
+        .page-heading { margin-bottom:14px; }
+        .page-heading h1 { font-size:25px; }
+        .page-heading .eyebrow { margin-bottom:5px; }
+        .content:has(#exercise-select) .page-heading { display:none; }
+        .toolbar { padding:10px 12px; gap:8px 12px; margin-bottom:12px; }
+        .toolbar .field { min-width:100px; }
+        .toolbar .field.wide { min-width:180px; }
+        .toolbar .select-trigger { min-height:36px; padding:7px 10px; }
+        .filter-bar { flex-basis:auto; flex:1; margin:0; padding:0 0 0 12px; border-top:0; border-left:1px solid var(--line); gap:10px; }
+        .filter-summary { display:none; }
+        .filter-trigger { min-height:36px; padding:7px 10px; }
+        .filter-overview { min-width:0; }
+        .question-header { padding:12px 16px 8px; }
+        .question-header .eyebrow { margin-bottom:5px; }
+        .question-header h2 { font-size:22px; }
+        .question-header p:last-child { margin-top:5px; line-height:1.4; }
+        .exercise-body { padding:0 16px 10px; }
+        .auto-controls { margin-bottom:8px; gap:8px 14px; }
+        .auto-controls .toggle-control { min-height:34px; padding:5px 8px; }
+        .auto-delay input { min-height:32px; padding:4px 6px; }
+        .board-tools { margin-bottom:4px; }
+        .board-tools .quiet-btn { min-height:32px; padding:5px 8px; }
+        .string-row, .fret { height:clamp(28px,calc((100dvh - 430px) / 6),40px); }
+        .fret .marker { width:25px; height:25px; font-size:11px; }
+        .board-caption, .legend { font-size:9px; margin-top:5px; margin-bottom:5px; }
+        .options { margin:8px 0; gap:7px; }
+        .option { min-height:40px; padding:7px 8px; font-size:18px; }
+        .feedback { margin-top:8px; padding:8px 10px; font-size:12px; min-height:0; }
+        .action-row { padding:8px 16px; gap:8px; }
+        .lesson-note { margin-top:12px; }
+      }
+      @media (min-width:851px) {
+        .exercise-card[data-kind="boardChoice"] .exercise-body { display:grid; grid-template-columns:minmax(0,1fr) 210px; gap:8px 16px; align-items:start; }
+        .exercise-card[data-kind="boardChoice"] .auto-controls,
+        .exercise-card[data-kind="boardChoice"] .challenge-limit,
+        .exercise-card[data-kind="boardChoice"] #feedback,
+        .exercise-card[data-kind="boardChoice"] #solution { grid-column:1/-1; }
+        .exercise-card[data-kind="boardChoice"] #board-host { grid-column:1; min-width:0; }
+        .exercise-card[data-kind="boardChoice"] #options { grid-column:2; grid-row:2; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; margin:0; align-self:center; }
+        .exercise-card[data-kind="boardChoice"]:has(.challenge-limit) #options { grid-row:3; }
+        .exercise-card[data-kind="boardChoice"] .board-caption,
+        .exercise-card[data-kind="boardChoice"] .legend { grid-column:1; }
+      }
+      body.practice-focus .content { max-width:1400px; padding:10px 16px; }
+      body.practice-focus .string-row, body.practice-focus .fret { height:clamp(26px,calc((100dvh - 300px) / 6),48px); }
+      body.practice-focus .options { gap:7px; margin:8px 0; }
+      body.practice-focus .option { min-height:40px; padding:6px; font-size:18px; }
+      body.practice-focus .auto-controls { margin-bottom:6px; }
+      body.practice-focus .action-row { padding:8px 14px; }
+      body.practice-focus .feedback { margin-top:8px; padding:8px 10px; }
+      body.practice-focus .shell { margin-bottom:0; }
+      @media (max-width:850px) {
+        body.practice-focus .content { padding:6px; }
+        body.practice-focus .question-header { padding:8px 10px; }
+        body.practice-focus .question-header h2 { font-size:18px; }
+        body.practice-focus .question-header p:last-child { margin-top:4px; }
+        body.practice-focus .exercise-body { padding:0 10px 6px; }
+        body.practice-focus .string-row, body.practice-focus .fret { height:clamp(26px,calc((100dvh - 440px) / 6),40px); }
+        body.practice-focus .board-tools .quiet-btn { min-height:36px; padding:5px 7px; }
+        body.practice-focus .action-row { gap:6px; padding:6px 10px; }
+        body.practice-focus .btn { min-height:36px; padding:6px 8px; }
+      }
+      /* On exceptionally short screens keep navigation reachable without clipping content. */
+      .content:has(#exercise-select) .exercise-card { overflow:visible; }
+      .content:has(#exercise-select) .action-row { position:sticky; bottom:0; z-index:5; background:var(--panel); border-radius:0 0 var(--radius) var(--radius); }
+      @media (max-width:850px) {
+        .content:has(#exercise-select) .action-row { bottom:70px; }
+        body.practice-focus .content .action-row { bottom:0; }
+      }
     </style>
   </head>
   <body>
@@ -3547,7 +3620,7 @@
           $("#page").innerHTML =
             pageHeading(config[route].title, config[route].subtitle) +
             exerciseControls() +
-            `<section class="exercise-card"><div class="question-header"><div><p class="eyebrow">${modes[mode]}</p><h2 id="question-title">${escape(q.title)}</h2><p id="question-help">${escape(q.help)}</p></div><span class="question-counter">Desafio ${String(questionNumber).padStart(2, "0")}</span></div><div class="exercise-body">${!q.canAdvance?'<p class="challenge-limit" role="status">Seus ajustes permitem só um desafio. Para avançar sem repetir, escolha Aleatório ou amplie as opções do exercício.</p>':''}${`<div class="auto-controls"><label class="auto-advance toggle-control"><input type="checkbox" id="find-auto-next" ${currentFilter().autoNext?'checked':''}><span>Avançar ao concluir</span></label><label class="auto-delay" for="find-auto-delay">Após <input type="number" id="find-auto-delay" min="0.1" max="5" step="0.05" value="${prefs.autoNextDelay/1000}" inputmode="decimal" aria-label="Tempo para avançar, em segundos" ${!currentFilter().autoNext||!q.canAdvance?'disabled':''}> s</label></div>`}${mode === "intervals" ? `<div class="inline-controls"><label class="toggle-control"><input id="sevenths-setting" type="checkbox" ${prefs.sevenths ? "checked" : ""}> Incluir a sétima</label></div>` : ""}${
+            `<section class="exercise-card" data-kind="${q.kind}"><div class="question-header"><div><p class="eyebrow">${modes[mode]}</p><h2 id="question-title">${escape(q.title)}</h2><p id="question-help">${escape(q.help)}</p></div><span class="question-counter">Desafio ${String(questionNumber).padStart(2, "0")}</span></div><div class="exercise-body">${!q.canAdvance?'<p class="challenge-limit" role="status">Seus ajustes permitem só um desafio. Para avançar sem repetir, escolha Aleatório ou amplie as opções do exercício.</p>':''}${`<div class="auto-controls"><label class="auto-advance toggle-control"><input type="checkbox" id="find-auto-next" ${currentFilter().autoNext?'checked':''}><span>Avançar ao concluir</span></label><label class="auto-delay" for="find-auto-delay">Após <input type="number" id="find-auto-delay" min="0.1" max="5" step="0.05" value="${prefs.autoNextDelay/1000}" inputmode="decimal" aria-label="Tempo para avançar, em segundos" ${!currentFilter().autoNext||!q.canAdvance?'disabled':''}> s</label></div>`}${mode === "intervals" ? `<div class="inline-controls"><label class="toggle-control"><input id="sevenths-setting" type="checkbox" ${prefs.sevenths ? "checked" : ""}> Incluir a sétima</label></div>` : ""}${
               mode === "formation"
                 ? `<div class="inline-controls"><label>Formação <select id="formation-kind">${[
                     ["random", "Misturar"],
