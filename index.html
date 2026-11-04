@@ -2030,8 +2030,6 @@
         .auto-delay input { min-height:32px; padding:4px 6px; }
         .board-tools { margin-bottom:4px; }
         .board-tools .quiet-btn { min-height:32px; padding:5px 8px; }
-        .string-row, .fret { height:clamp(28px,calc((100dvh - 430px) / 6),40px); }
-        .fret .marker { width:25px; height:25px; font-size:11px; }
         .board-caption, .legend { font-size:9px; margin-top:5px; margin-bottom:5px; }
         .options { margin:8px 0; gap:7px; }
         .option { min-height:40px; padding:7px 8px; font-size:18px; }
@@ -2052,7 +2050,6 @@
         .exercise-card[data-kind="boardChoice"] .legend { grid-column:1; }
       }
       body.practice-focus .content { max-width:1400px; padding:10px 16px; }
-      body.practice-focus .string-row, body.practice-focus .fret { height:clamp(26px,calc((100dvh - 300px) / 6),48px); }
       body.practice-focus .options { gap:7px; margin:8px 0; }
       body.practice-focus .option { min-height:40px; padding:6px; font-size:18px; }
       body.practice-focus .auto-controls { margin-bottom:6px; }
@@ -2065,7 +2062,6 @@
         body.practice-focus .question-header h2 { font-size:18px; }
         body.practice-focus .question-header p:last-child { margin-top:4px; }
         body.practice-focus .exercise-body { padding:0 10px 6px; }
-        body.practice-focus .string-row, body.practice-focus .fret { height:clamp(26px,calc((100dvh - 440px) / 6),40px); }
         body.practice-focus .board-tools .quiet-btn { min-height:36px; padding:5px 7px; }
         body.practice-focus .action-row { gap:6px; padding:6px 10px; }
         body.practice-focus .btn { min-height:36px; padding:6px 8px; }
@@ -2077,6 +2073,21 @@
         .content:has(#exercise-select) .action-row { bottom:70px; }
         body.practice-focus .content .action-row { bottom:0; }
       }
+
+      .practice-settings { margin:0 0 8px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; font-size:11px; color:var(--muted); }
+      .practice-settings summary { cursor:pointer; color:var(--text); }
+      .practice-setting-fields { display:flex; flex-wrap:wrap; gap:10px; padding:12px 0; }
+      .practice-setting-fields .field { flex:1; min-width:130px; }
+      .practice-settings p { font-size:11px; line-height:1.5; }
+      .harmony-steps { display:flex; gap:6px; flex-wrap:wrap; list-style:none; padding:0; margin:0 0 8px; }
+      .harmony-steps li { padding:5px 10px; border:1px solid var(--line); border-radius:6px; color:var(--muted); font-size:12px; }
+      .harmony-steps li span { font-size:10px; opacity:.65; margin-right:4px; }
+      .harmony-steps [aria-current=step] { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+      .harmony-steps .done { color:var(--correct); }
+      @media (min-width:851px) and (max-height:900px) {
+      }
+      html[data-custom-string-spacing] .string-row, html[data-custom-string-spacing] .fret { height:var(--string-spacing) !important; }
+      html[data-custom-string-spacing] .fret .marker { max-width:calc(var(--string-spacing) - 4px); max-height:calc(var(--string-spacing) - 4px); }
     </style>
   </head>
   <body>
@@ -2174,12 +2185,14 @@
         <label class="field"
           >Volume <input id="volume-setting" type="range" min="0" max="100" value="60" /></label
         ><label class="field"
-          >Tamanho das casas<select id="size-setting">
+          >Largura das casas<select id="size-setting">
             <option value="64">Compacto</option>
             <option value="76">Confortável</option>
             <option value="92">Grande</option>
           </select></label
-        ><label class="field"
+        ><label class="switch-row"><span>Espaçamento padrão<small>Manter a distância original entre as cordas.</small></span><input id="string-spacing-auto" type="checkbox" checked></label>
+        <label class="field">Espaçamento entre cordas <output id="string-spacing-value">Padrão</output><input id="string-spacing-setting" type="range" min="26" max="72" step="1" value="44" disabled></label>
+        <label class="field"
           >Orientação do braço<select id="orientation-setting">
             <option value="tab">Atual: 1ª aguda em cima · 6ª grave embaixo</option>
             <option value="bass">Invertido: 6ª grave em cima · 1ª aguda embaixo</option>
@@ -2644,6 +2657,9 @@
               "degreeName",
               "degreeChord",
               "target",
+              "chordMap",
+              "targetProgression",
+              "voicingProgression",
             ],
           },
           livre: {
@@ -2669,6 +2685,9 @@
           degreeName: "Nomes dos graus",
           degreeChord: "Acorde do grau no braço",
           target: "Notas-alvo do acorde",
+          chordMap: "Acorde inteiro no shape",
+          targetProgression: "Alvos na progressão",
+          voicingProgression: "Acordes na progressão",
         };
         const activityHelp = {
           find: "Encontre uma ocorrência da nota pedida em cada uma das seis cordas.",
@@ -2687,6 +2706,9 @@
           degreeName: "Associe os números dos graus aos nomes, como tônica e dominante.",
           degreeChord: "Monte no braço o acorde do grau pedido no campo harmônico.",
           target: "Localize a tônica, terça ou quinta do acorde atual dentro de uma região.",
+          chordMap: "Mapeie todas as notas de uma tríade ou tétrade do campo harmônico dentro de um shape.",
+          targetProgression: "Acompanhe uma progressão na mesma região e encontre os alvos de cada acorde. Treine também terças e sétimas.",
+          voicingProgression: "Monte tríades, tétrades ou acordes com repetições em uma progressão, sem sair da região escolhida.",
         };
         function renderGuide() {
           $("#guide-content").innerHTML = Object.entries(config)
@@ -2763,7 +2785,7 @@
         }
         function exerciseControls() {
           const shapes=route==='escalas',harmony=route==='harmonia';
-          return `<div class="toolbar"><label class="field wide">Exercício<select id="exercise-select">${config[route].modes.map(m=>`<option value="${m}" ${m===mode?'selected':''}>${modes[m]}</option>`).join('')}</select></label>${!['identify','degreeName'].includes(mode)?`<label class="field">${mode==='find'?'Nota':'Tônica'}<select id="root-select">${rootOptions(prefs.root,shapes&&prefs.scale==='pentaMinor'?'minor':shapes?'major':prefs.mode)}</select></label>`:''}${harmony?`<label class="field">Escala<select id="mode-select">${modeOptions()}</select></label>`:''}${shapes?`<label class="field">Escala<select id="scale-select">${scaleOptions(prefs.scale)}</select></label>`:''}${shapes||mode==='target'?`<label class="field">${shapes&&prefs.scale==='pentaMinor'?'Box':'Shape'}<select id="shape-select"><option value="all" ${prefs.shape==='all'?'selected':''}>Aleatório</option>${Theory.cagedNames.map((n,i)=>`<option value="${i+1}" ${prefs.shape===i+1?'selected':''}>${i+1}${shapes&&prefs.scale==='pentaMinor'?'':' · '+n}</option>`).join('')}</select></label>`:''}${filterControls()}</div>`;
+          return `<div class="toolbar"><label class="field wide">Exercício<select id="exercise-select">${config[route].modes.map(m=>`<option value="${m}" ${m===mode?'selected':''}>${modes[m]}</option>`).join('')}</select></label>${!['identify','degreeName'].includes(mode)?`<label class="field">${mode==='find'?'Nota':'Tônica'}<select id="root-select">${rootOptions(prefs.root,shapes&&prefs.scale==='pentaMinor'?'minor':shapes?'major':prefs.mode)}</select></label>`:''}${harmony?`<label class="field">Escala<select id="mode-select">${modeOptions()}</select></label>`:''}${shapes?`<label class="field">Escala<select id="scale-select">${scaleOptions(prefs.scale)}</select></label>`:''}${shapes||mode==='target'||harmonyModes.includes(mode)?`<label class="field">${shapes&&prefs.scale==='pentaMinor'?'Box':'Shape'}<select id="shape-select"><option value="all" ${prefs.shape==='all'?'selected':''}>Aleatório</option>${Theory.cagedNames.map((n,i)=>`<option value="${i+1}" ${prefs.shape===i+1?'selected':''}>${i+1}${shapes&&prefs.scale==='pentaMinor'?'':' · '+n}</option>`).join('')}</select></label>`:''}${filterControls()}</div>`;
         }
         let pickerSelect=null,pickerButton=null,pickerCounter=0;
         function upgradePickers(root=document) {
@@ -2828,6 +2850,13 @@
           sevenths: false,
           keepMarks: false,
           autoNextDelay: 350,
+          stringSpacing: "auto",
+          practiceSize: "triad",
+          practiceDegree: "all",
+          practicePattern: "random",
+          practiceFocus: "all",
+          practiceVoicing: "compact",
+          practiceLabels: "chord",
         };
         let storageAvailable = true;
         function load() {
@@ -2859,6 +2888,13 @@
                 mode: p.mode === "minor" ? "minor" : "major",
                 scale: ["major", "pentaMajor", "pentaMinor"].includes(p.scale) ? p.scale : "major",
                 shape: [1, 2, 3, 4, 5].includes(p.shape) ? p.shape : "all",
+                stringSpacing: Number.isInteger(p.stringSpacing)&&p.stringSpacing>=26&&p.stringSpacing<=72?p.stringSpacing:'auto',
+                practiceSize: p.practiceSize==='seventh'?'seventh':'triad',
+                practiceDegree: Number.isInteger(p.practiceDegree)&&p.practiceDegree>=0&&p.practiceDegree<7?p.practiceDegree:'all',
+                practicePattern: ['0','1','2','3','4'].includes(p.practicePattern)?p.practicePattern:'random',
+                practiceFocus: ['all','third','seventh','guide'].includes(p.practiceFocus)?p.practiceFocus:'all',
+                practiceVoicing: p.practiceVoicing==='full'?'full':'compact',
+                practiceLabels: ['chord','key','notes'].includes(p.practiceLabels)?p.practiceLabels:'chord',
                 sevenths: p.sevenths === true,
                 keepMarks: p.keepMarks === true,
                 autoNextDelay: Number.isFinite(p.autoNextDelay) ? Math.max(100,Math.min(5000,Math.round(p.autoNextDelay))) : defaults.autoNextDelay,
@@ -3022,12 +3058,17 @@
             return;
           }
           audio.stop();
+          if(q.steps&&q.step<q.steps.length-1) {
+            if(!q.solved){feedback('hint','Conclua este acorde ou use Ver resposta antes de continuar.');return;}
+            q.previousVoicing=[...q.selected].map(k=>{const [s,f]=k.split(':').map(Number);return {s,f};});
+            q.step++;setupHarmonyStep(q);renderExercise(q);return;
+          }
           renderExercise();
         }
         function complete(message) {
           if (q.solved) return;
           q.solved = true;
-          record(!q.hadMistake && !q.revealed);
+          if(!q.steps||q.step===q.steps.length-1)record(!q.hadMistake && !q.revealed);
           feedback("success", message);
           if ($("#check-answer")) $("#check-answer").disabled = true;
           $$(".option").forEach((b) => (b.disabled = true));
@@ -3227,6 +3268,65 @@
             [0, 6, 5, 6],
           ],
         };
+        const harmonyModes = ['chordMap','targetProgression','voicingProgression'];
+        function harmonyChord(root, scaleMode, degree, size) {
+          const c=Theory.field(root,scaleMode)[degree];
+          if(size!=='seventh')return c;
+          const notes=[...c.notes,Theory.scale(root,scaleMode)[(degree+6)%7]],pcs=notes.map(Theory.pc);
+          const suffix=c.quality==='dim'?'m7♭5':c.quality==='minor'?'m7':Theory.mod(pcs[3]-pcs[0])===11?'maj7':'7';
+          return {...c,notes,pcs,name:c.root+suffix,roman:c.roman+'7'};
+        }
+        function practiceVoicing(chord,shape,count=0,previous=[]) {
+          let best=null,bestScore=Infinity;
+          const candidates=Theory.tuning.map((_,s)=>Array.from({length:shape.max-shape.min+1},(_,i)=>shape.min+i).filter(f=>chord.pcs.includes(Theory.note(s,f))));
+          function search(s,points) {
+            if(points.length+(6-s)<(count||chord.pcs.length))return;
+            if(s===6) {
+              if(count&&points.length!==count||points.length<chord.pcs.length)return;
+              if(!chord.pcs.every(pc=>points.some(p=>Theory.note(p.s,p.f)===pc)))return;
+              const fretted=points.filter(p=>p.f>0).map(p=>p.f);
+              if(fretted.length&&Math.max(...fretted)-Math.min(...fretted)>4)return;
+              const score=points.reduce((n,p)=>n+p.f/20+(previous.length?Math.min(...previous.map(old=>Math.abs(Theory.midi(old.s,old.f)-Theory.midi(p.s,p.f)))):0),0)+(6-points.length)*2;
+              if(score<bestScore){best=points;bestScore=score;}return;
+            }
+            search(s+1,points);
+            if(!count||points.length<count)for(const f of candidates[s])search(s+1,[...points,{s,f}]);
+          }
+          search(0,[]);return best;
+        }
+        function setupHarmonyStep(x) {
+          const degree=x.steps?x.steps[x.step]:x.practiceDegree;
+          x.chord=harmonyChord(x.key,x.scaleMode,degree,x.practiceSize);
+          x.selected=new Set();x.found=new Set();x.wrong=new Set();x.solved=false;x.revealed=false;
+          x.canAdvance=!!x.steps&&x.step<x.steps.length-1||x.nextChallengeAllowed;
+          const roles=x.practiceFocus==='third'?[1]:x.practiceFocus==='seventh'?[3]:x.practiceFocus==='guide'?[1,3]:x.chord.pcs.map((_,i)=>i);
+          const targetPcs=roles.filter(i=>i<x.chord.pcs.length).map(i=>x.chord.pcs[i]);
+          x.shown=new Set(x.shape.points.map(keyOf));
+          x.expected=new Set(x.shape.points.filter(p=>targetPcs.includes(Theory.note(p.s,p.f))).map(keyOf));
+          x.kind=x.voicing?'boardMulti':'board';
+          x.example=x.voicing?practiceVoicing(x.chord,x.shape,x.voicingCount,x.previousVoicing):null;
+          if(x.voicing&&!x.example)throw Error('Sem voicing para estes ajustes.');
+          const keyScale=Theory.scale(x.key,x.scaleMode),degrees=x.chord.notes.map(n=>keyScale.findIndex(v=>Theory.pc(v)===Theory.pc(n))+1);
+          const step=x.steps?`Acorde ${x.step+1}/${x.steps.length} · `:'';
+          const focus={all:'todas as notas',third:'a terça',seventh:'a sétima',guide:'a terça e a sétima'}[x.practiceFocus];
+          x.title=x.voicing?`${step}Monte ${x.chord.name} na região.`:`${step}${x.chord.roman} grau: encontre ${focus} de ${x.chord.name}.`;
+          const shapeLabel=x.shape.label+(x.scaleMode==='minor'?' da relativa maior '+keyScale[2]:'');
+          x.help=`${x.key} ${x.scaleMode==='minor'?'menor natural':'maior'} · ${shapeLabel} · casas ${x.shape.min}–${x.shape.max}. `+(x.voicing?`Use ${x.voicingCount||'3 a 6'} cordas, uma nota por corda, com todas as notas do acorde. Inversões são aceitas.`:`Encontre ${x.expected.size} posições marcadas. Os números encontrados representam ${prefs.practiceLabels==='key'?'graus do tom':prefs.practiceLabels==='notes'?'nomes das notas':'graus do acorde'}.`);
+          x.hint=`${x.chord.name} = ${x.chord.notes.join(' · ')}. No tom de ${x.key}: graus ${degrees.join('–')}. ${x.voicing?'Procure notas comuns com o acorde anterior e mova as outras o mínimo possível.':'Comece pela tônica do acorde e localize suas terças, quintas e, na tétrade, sétimas.'}`;
+          x.explanation=`${x.chord.name} = ${x.chord.notes.join(' · ')} · graus ${degrees.join('–')} do tom de ${x.key}.`;
+          return x;
+        }
+        function harmonySettings() {
+          if(!harmonyModes.includes(mode))return '';
+          const select=(id,label,values,value)=>`<label class="field">${label}<select id="${id}">${values.map(([v,l])=>`<option value="${v}" ${String(value)===String(v)?'selected':''}>${l}</option>`).join('')}</select></label>`;
+          return `<details class="practice-settings"><summary>Ajustes do treino · ${q.practiceSize==='seventh'?'Tétrades':'Tríades'}${q.steps?' · '+q.steps.map(d=>q.field[d].roman).join(' → '):''}</summary><div class="practice-setting-fields">${select('practice-size','Acorde',[['triad','Tríade · 1–3–5'],['seventh','Tétrade · 1–3–5–7']],prefs.practiceSize)}${mode==='chordMap'?select('practice-degree','Grau do campo',[['all','Aleatório'],...[0,1,2,3,4,5,6].map(d=>[d,(d+1)+'º grau'])],prefs.practiceDegree):select('practice-pattern','Progressão',[['random','Aleatória'],...progressionSets[prefs.mode].map((p,i)=>[i,p.map(d=>q.field[d].roman).join(' → ')])],prefs.practicePattern)}${mode==='voicingProgression'?select('practice-voicing','Voicing',[['compact','Tríade em 3 cordas / tétrade em 4'],['full','Acorde completo · com repetições']],prefs.practiceVoicing):select('practice-focus','Notas-alvo',[['all','Acorde inteiro'],['third','Terça'],...(prefs.practiceSize==='seventh'?[['seventh','Sétima'],['guide','Terça + sétima']]:[])],prefs.practiceFocus)}${select('practice-labels','Marcadores',[['chord','Graus do acorde'],['key','Graus do tom'],['notes','Nomes das notas']],prefs.practiceLabels)}</div><p>Em tom menor, os shapes usam a relativa maior. O treino de alvos marca todas as ocorrências; montar acordes pede uma posição por corda.</p></details>${q.steps?`<ol class="harmony-steps" aria-label="Progressão">${q.steps.map((d,i)=>`<li ${i===q.step?'aria-current="step"':''} class="${i<q.step?'done':''}"><span>${i+1}</span> ${harmonyChord(q.key,q.scaleMode,d,q.practiceSize).name}</li>`).join('')}</ol>`:''}`;
+        }
+        function practiceMarker(pitch) {
+          if(prefs.practiceLabels==='notes')return Theory.nameFor(q.key,pitch,q.scaleMode);
+          if(prefs.practiceLabels==='key')return Theory.degreeLabel(q.key,pitch);
+          return Theory.degreeLabel(q.chord.root,pitch);
+        }
+
         // Enumerate the permitted challenges once, then exclude the previous identity.
         // No retry loop: even a deterministic random source cannot produce a repeat.
         const lastChallenges=new Map();
@@ -3246,7 +3346,10 @@
             }
           }else for(const pitch of pitches) {
             const base={pitch};
-            if(mode==='find')add(base,[pitch]);
+            if(harmonyModes.includes(mode)) {
+              const steps=mode==='chordMap'?(prefs.practiceDegree==='all'?degrees:[Number(prefs.practiceDegree)]):(prefs.practicePattern==='random'?progressionSets[prefs.mode]:[progressionSets[prefs.mode][Number(prefs.practicePattern)]||progressionSets[prefs.mode][0]]);
+              for(const shapeNum of shapes)for(const step of steps)add({...base,shapeNum,...(mode==='chordMap'?{degree:step}:{practiceSteps:step})},[pitch,prefs.mode,shapeNum,step,prefs.practiceSize,prefs.practiceFocus,prefs.practiceVoicing]);
+            }else if(mode==='find')add(base,[pitch]);
             else if(['field','scaleDegree','degreeChord'].includes(mode)) {
               for(const degree of degrees)add({...base,degree},[pitch,prefs.mode,degree]);
             }else if(mode==='buildChord') {
@@ -3333,7 +3436,19 @@
                 label: Theory.nameFor(root, i, prefs.mode),
               })),
             );
-          if (mode === "field") {
+          if(harmonyModes.includes(mode)) {
+            const relative=prefs.mode==='minor'?scale[2]:root;
+            x.shape=Theory.shape(relative,'major',challenge.shapeNum);
+            x.region=[x.shape.min,x.shape.max];
+            x.scaleMode=prefs.mode;x.practiceDegree=degree;
+            x.practiceSize=prefs.practiceSize;
+            x.practiceFocus=prefs.practiceSize==='triad'&&['seventh','guide'].includes(prefs.practiceFocus)?'third':prefs.practiceFocus;
+            x.voicing=mode==='voicingProgression';
+            x.voicingCount=prefs.practiceVoicing==='full'?0:prefs.practiceSize==='seventh'?4:3;
+            x.steps=challenge.practiceSteps;x.step=0;x.previousVoicing=[];
+            x.nextChallengeAllowed=x.canAdvance;
+            setupHarmonyStep(x);
+          } else if (mode === "field") {
             const c = field[degree];
             Object.assign(x, {
               title: `Qual acorde é o ${c.roman} grau de ${keyTitle}?`,
@@ -3605,9 +3720,9 @@
           lastChallenges.set(mode,{signature:challenge.signature,pitch:challenge.pitch});
           return x;
         }
-        function renderExercise() {
+        function renderExercise(existing = null) {
           clearTimeout(autoNextTimer);
-          q = makeQuestion();
+          q = existing?.signature ? existing : makeQuestion();
           board = null;
           if(!q) {
             $("#page").innerHTML=pageHeading(config[route].title,config[route].subtitle)+exerciseControls()+`<section class="exercise-card"><div class="empty-exercise"><p class="eyebrow">${modes[mode]}</p><h2>Nenhum desafio novo com estes ajustes.</h2><p>As opções atuais só permitem repetir o desafio anterior. Escolha outra nota, use Aleatório ou amplie os filtros para continuar.</p></div><div class="action-row"><button type="button" class="btn primary" id="expand-challenges">Restaurar opções do exercício ${icon('refresh')}</button></div></section>`;
@@ -3620,7 +3735,7 @@
           $("#page").innerHTML =
             pageHeading(config[route].title, config[route].subtitle) +
             exerciseControls() +
-            `<section class="exercise-card" data-kind="${q.kind}"><div class="question-header"><div><p class="eyebrow">${modes[mode]}</p><h2 id="question-title">${escape(q.title)}</h2><p id="question-help">${escape(q.help)}</p></div><span class="question-counter">Desafio ${String(questionNumber).padStart(2, "0")}</span></div><div class="exercise-body">${!q.canAdvance?'<p class="challenge-limit" role="status">Seus ajustes permitem só um desafio. Para avançar sem repetir, escolha Aleatório ou amplie as opções do exercício.</p>':''}${`<div class="auto-controls"><label class="auto-advance toggle-control"><input type="checkbox" id="find-auto-next" ${currentFilter().autoNext?'checked':''}><span>Avançar ao concluir</span></label><label class="auto-delay" for="find-auto-delay">Após <input type="number" id="find-auto-delay" min="0.1" max="5" step="0.05" value="${prefs.autoNextDelay/1000}" inputmode="decimal" aria-label="Tempo para avançar, em segundos" ${!currentFilter().autoNext||!q.canAdvance?'disabled':''}> s</label></div>`}${mode === "intervals" ? `<div class="inline-controls"><label class="toggle-control"><input id="sevenths-setting" type="checkbox" ${prefs.sevenths ? "checked" : ""}> Incluir a sétima</label></div>` : ""}${
+            `<section class="exercise-card" data-kind="${q.kind}"><div class="question-header"><div><p class="eyebrow">${modes[mode]}</p><h2 id="question-title">${escape(q.title)}</h2><p id="question-help">${escape(q.help)}</p></div><span class="question-counter">Desafio ${String(questionNumber).padStart(2, "0")}</span></div><div class="exercise-body">${!q.canAdvance?'<p class="challenge-limit" role="status">Seus ajustes permitem só um desafio. Para avançar sem repetir, escolha Aleatório ou amplie as opções do exercício.</p>':''}${`<div class="auto-controls"><label class="auto-advance toggle-control"><input type="checkbox" id="find-auto-next" ${currentFilter().autoNext?'checked':''}><span>Avançar ao concluir</span></label><label class="auto-delay" for="find-auto-delay">Após <input type="number" id="find-auto-delay" min="0.1" max="5" step="0.05" value="${prefs.autoNextDelay/1000}" inputmode="decimal" aria-label="Tempo para avançar, em segundos" ${!currentFilter().autoNext||!q.canAdvance?'disabled':''}> s</label></div>`}${harmonySettings()}${mode === "intervals" ? `<div class="inline-controls"><label class="toggle-control"><input id="sevenths-setting" type="checkbox" ${prefs.sevenths ? "checked" : ""}> Incluir a sétima</label></div>` : ""}${
               mode === "formation"
                 ? `<div class="inline-controls"><label>Formação <select id="formation-kind">${[
                     ["random", "Misturar"],
@@ -3634,7 +3749,7 @@
                     )
                     .join("")}</select></label></div>`
                 : ""
-            }${mode === "progression" ? `<div class="inline-controls"><label>Progressão <select id="pattern-choice"><option value="random">Aleatória</option>${progressionSets[prefs.mode].map((p, i) => `<option value="${i}" ${String(i) === patternChoice ? "selected" : ""}>${p.map((d) => q.field[d].roman).join(" – ")}</option>`).join("")}</select></label></div><div id="sequence" class="sequence" aria-label="Acordes da progressão"></div>` : ""}${q.kind.startsWith("board") ? `<div id="board-host"></div><div class="board-caption"><span>${prefs.orientation === "tab" ? "1ª corda (aguda) em cima · 6ª (grave) embaixo" : "6ª corda (grave) em cima · 1ª (aguda) embaixo"}</span><span>Casas com largura fixa · deslize para explorar</span></div><div class="legend"><span><i class="root"></i> ${mode === "identify" ? "Posição a identificar" : "Tônica / seleção"}</span><span><i class="hollow"></i> ${route === "escalas" || mode === "target" ? "Posições do shape" : "Uma nota por casa"}</span></div>` : ""}${q.kind === "intervals" ? `<div class="interval-grid">${q.intervals.map((v, i) => `<label class="field">${v.label}<select class="interval-answer" data-index="${i}"><option value="">Selecione</option>${q.options.map((o) => `<option value="${o.id}">${o.label}</option>`).join("")}</select></label>`).join("")}</div>` : ""}${q.options.length && q.kind !== "intervals" ? '<div id="options" class="options"></div>' : ""}${["boardMulti", "multi"].includes(q.kind) ? '<div id="selection-summary" class="selection-line"></div>' : ""}<div id="feedback" class="feedback" role="status" aria-live="polite"></div><div id="solution"></div></div><div class="action-row"><div class="action-cluster">${multi ? `<button class="btn primary" id="check-answer" type="button">${icon("check")}Verificar</button>` : ""}${q.kind === "sequence" ? `<button class="btn" id="undo-answer" type="button">${icon("undo")}Desfazer</button>` : ""}${q.chord || q.audioNote || q.kind === "sequence" ? `<button class="btn" id="listen-answer" type="button">${icon("sound")}${q.kind === "sequence" ? "Ouvir sequência" : q.audioNote ? "Ouvir nota" : "Ouvir acorde"}</button>` : ""}<button class="btn ${multi ? "" : "primary"}" id="next-question" type="button" ${!q.canAdvance?'disabled title="Amplie as opções para continuar sem repetir"':''}>Próximo ${icon("arrow")}<span class="shortcut">N</span></button></div><div class="action-cluster"><button class="btn text" id="hint-button" type="button">Dica</button><button class="btn text" id="reveal-button" type="button">Ver resposta</button></div></div></section><details class="lesson-note"><summary>Como aproveitar este treino</summary><p>${lessonText()}</p></details>`;
+            }${mode === "progression" ? `<div class="inline-controls"><label>Progressão <select id="pattern-choice"><option value="random">Aleatória</option>${progressionSets[prefs.mode].map((p, i) => `<option value="${i}" ${String(i) === patternChoice ? "selected" : ""}>${p.map((d) => q.field[d].roman).join(" – ")}</option>`).join("")}</select></label></div><div id="sequence" class="sequence" aria-label="Acordes da progressão"></div>` : ""}${q.kind.startsWith("board") ? `<div id="board-host"></div><div class="board-caption"><span>${prefs.orientation === "tab" ? "1ª corda (aguda) em cima · 6ª (grave) embaixo" : "6ª corda (grave) em cima · 1ª (aguda) embaixo"}</span><span>Casas com largura fixa · deslize para explorar</span></div><div class="legend"><span><i class="root"></i> ${mode === "identify" ? "Posição a identificar" : "Tônica / seleção"}</span><span><i class="hollow"></i> ${route === "escalas" || mode === "target" ? "Posições do shape" : "Uma nota por casa"}</span></div>` : ""}${q.kind === "intervals" ? `<div class="interval-grid">${q.intervals.map((v, i) => `<label class="field">${v.label}<select class="interval-answer" data-index="${i}"><option value="">Selecione</option>${q.options.map((o) => `<option value="${o.id}">${o.label}</option>`).join("")}</select></label>`).join("")}</div>` : ""}${q.options.length && q.kind !== "intervals" ? '<div id="options" class="options"></div>' : ""}${["boardMulti", "multi"].includes(q.kind) ? '<div id="selection-summary" class="selection-line"></div>' : ""}<div id="feedback" class="feedback" role="status" aria-live="polite"></div><div id="solution"></div></div><div class="action-row"><div class="action-cluster">${multi ? `<button class="btn primary" id="check-answer" type="button">${icon("check")}Verificar</button>` : ""}${q.kind === "sequence" ? `<button class="btn" id="undo-answer" type="button">${icon("undo")}Desfazer</button>` : ""}${q.chord || q.audioNote || q.kind === "sequence" ? `<button class="btn" id="listen-answer" type="button">${icon("sound")}${q.kind === "sequence" ? "Ouvir sequência" : q.audioNote ? "Ouvir nota" : "Ouvir acorde"}</button>` : ""}<button class="btn ${multi ? "" : "primary"}" id="next-question" type="button" ${!q.canAdvance?'disabled title="Amplie as opções para continuar sem repetir"':''}>${q.steps&&q.step<q.steps.length-1?'Próximo acorde':'Próximo'} ${icon("arrow")}<span class="shortcut">N</span></button></div><div class="action-cluster"><button class="btn text" id="hint-button" type="button">Dica</button><button class="btn text" id="reveal-button" type="button">Ver resposta</button></div></div></section><details class="lesson-note"><summary>Como aproveitar este treino</summary><p>${lessonText()}</p></details>`;
           bindExerciseControls();
           if (q.kind.startsWith("board")) {
             board = new Fretboard($("#board-host"), {
@@ -3673,6 +3788,13 @@
         }
         function bindExerciseControls() {
           $('#filters-open')?.addEventListener('click',openFilters);
+          for(const [id,key] of [['practice-size','practiceSize'],['practice-degree','practiceDegree'],['practice-pattern','practicePattern'],['practice-focus','practiceFocus'],['practice-voicing','practiceVoicing'],['practice-labels','practiceLabels']]) {
+            $('#'+id)?.addEventListener('change',e=>{
+              prefs[key]=key==='practiceDegree'&&e.target.value!=='all'?Number(e.target.value):e.target.value;
+              if(prefs.practiceSize==='triad'&&['seventh','guide'].includes(prefs.practiceFocus))prefs.practiceFocus='third';
+              save();lastChallenges.delete(mode);audio.stop();renderExercise();
+            });
+          }
           $('#find-auto-next')?.addEventListener('change',e=>{
             const f=currentFilter();f.autoNext=e.target.checked;prefs.filters[mode]=f;
             $('#find-auto-delay').disabled=!f.autoNext||!q?.canAdvance;
@@ -3717,6 +3839,7 @@
           });
         }
         function lessonText() {
+          if(harmonyModes.includes(mode))return 'Comece com C maior, shape fixo e tríades. Mapeie o V grau (G–B–D), depois faça ii–V–I na mesma região. Toque na guitarra cada posição e crie uma frase curta terminando na terça do acorde seguinte. Passe para tétrades e terça + sétima; só então alterne tons e shapes. Os graus do acorde (1–3–5–7) têm como referência a tônica do acorde, e os graus do tom têm como referência a tonalidade. Montar no site não avalia digitação, ritmo nem execução no instrumento.';
           if (mode === "degreeName")
             return "Tônica, dominante e sensível também nomeiam graus da escala. A função harmônica de um acorde depende do contexto; este exercício treina apenas a nomenclatura dos graus.";
           if (mode === "target")
@@ -3818,16 +3941,16 @@
               };
             return d;
           }
-          if (mode === "buildChord" || mode === "degreeChord") {
+          if (mode === "buildChord" || mode === "degreeChord" || q.voicing) {
             if (q.selected.has(key))
               return {
-                label: name,
+                label: q.voicing?practiceMarker(pitch):name,
                 visible: true,
                 selected: true,
                 correct: q.solved && !q.revealed,
               };
             if (q.revealed && q.expected.has(key))
-              return { label: name, visible: true, correct: true };
+              return { label: q.voicing?practiceMarker(pitch):name, visible: true, correct: true };
             return d;
           }
           if (q.shown.has(key)) {
@@ -3844,7 +3967,7 @@
             Object.assign(d, { label: "·", visible: true, selected: true, ghost: false });
           if (q.found.has(key))
             Object.assign(d, {
-              label: mode === "find" ? name : Theory.degreeLabel(q.key, pitch),
+              label: mode === "find" ? name : harmonyModes.includes(mode)?practiceMarker(pitch):Theory.degreeLabel(q.key, pitch),
               visible: true,
               correct: true,
               ghost: false,
@@ -3853,7 +3976,7 @@
             Object.assign(d, { label: name, visible: true, wrong: true, ghost: false });
           if (q.revealed && q.expected.has(key))
             Object.assign(d, {
-              label: mode === "find" ? name : Theory.degreeLabel(q.key, pitch),
+              label: mode === "find" ? name : harmonyModes.includes(mode)?practiceMarker(pitch):Theory.degreeLabel(q.key, pitch),
               visible: true,
               correct: true,
               ghost: false,
@@ -3877,6 +4000,7 @@
             return;
           }
           if(q.activeStrings&&!q.activeStrings.includes(s))return;
+          if(q.voicing&&(f<q.region[0]||f>q.region[1])){feedback('hint','Monte o acorde dentro da região destacada.');return;}
           if (q.kind === "boardMulti") {
             if (mode === "connect" && q.shown.has(key)) {
               feedback(
@@ -3885,7 +4009,7 @@
               );
               return;
             }
-            if (mode === "buildChord" || mode === "degreeChord") {
+            if (mode === "buildChord" || mode === "degreeChord" || q.voicing) {
               if (q.selected.has(key)) q.selected.delete(key);
               else {
                 for (const old of [...q.selected])
@@ -3937,7 +4061,7 @@
         function selectionSummary() {
           const host = $("#selection-summary");
           if (!host) return;
-          if (mode === "buildChord" || mode === "degreeChord") {
+          if (mode === "buildChord" || mode === "degreeChord" || q.voicing) {
             const points = [...q.selected]
               .map((k) => k.split(":").map(Number))
               .sort((a, b) => a[0] - b[0]);
@@ -3993,7 +4117,7 @@
             feedback("hint", "Selecione as notas antes de verificar.");
             return;
           }
-          if (mode === "buildChord" || mode === "degreeChord") {
+          if (mode === "buildChord" || mode === "degreeChord" || q.voicing) {
             if(q.caged) {
               if(sameSet(q.selected,q.expected)){complete(q.explanation);board.update();}
               else wrong(`Monte o desenho da ${q.caged.label[0].toLowerCase()+q.caged.label.slice(1)}: ${[...q.expected].filter(k=>!q.selected.has(k)).length} posições faltando e ${[...q.selected].filter(k=>!q.expected.has(k)).length} fora do desenho.`);
@@ -4002,8 +4126,9 @@
             const coords = [...q.selected].map((k) => k.split(":").map(Number)),
               pcs = new Set(coords.map(([s, f]) => Theory.note(s, f)));
             const fretted = coords.map((p) => p[1]).filter((f) => f > 0);
-            if (coords.length < 3) {
-              feedback("hint", "Use ao menos três cordas para formar a tríade.");
+            if(q.voicing&&q.voicingCount&&coords.length!==q.voicingCount){feedback('hint',`Use exatamente ${q.voicingCount} cordas neste treino.`);return;}
+            if (coords.length < q.chord.pcs.length) {
+              feedback("hint", `Use ao menos ${q.chord.pcs.length} cordas para incluir todas as notas do acorde.`);
               return;
             }
             if (fretted.length && Math.max(...fretted) - Math.min(...fretted) > 4) {
@@ -4018,7 +4143,7 @@
               board.update();
             } else
               wrong(
-                "O acorde precisa ter suas três notas, sem notas de fora. Você pode repetir notas ou usar outra inversão.",
+                `O acorde precisa de ${q.chord.notes.join(" · ")}, sem notas de fora. Confira as notas e a inversão.`,
               );
             return;
           }
@@ -4100,7 +4225,7 @@
             audio.play(q.sequence.flatMap((d, i) => chordEvents(q.field[d], i * 1.25, 1.2)));
             return;
           }
-          if (q.selected.size && (mode === "buildChord" || mode === "degreeChord")) {
+          if (q.selected.size && (mode === "buildChord" || mode === "degreeChord" || q.voicing)) {
             audio.play(
               [...q.selected]
                 .map((k) => k.split(":").map(Number))
@@ -4136,9 +4261,9 @@
               el.value = String(q.intervals[i].pc);
               el.disabled = true;
             });
-          } else if (mode === "buildChord" || mode === "degreeChord") {
+          } else if (mode === "buildChord" || mode === "degreeChord" || q.voicing) {
             q.selected.clear();
-            q.expected = new Set((q.caged?q.caged.points:guitarVoicing(q.chord,q.activeStrings)).map(keyOf));
+            q.expected = new Set((q.voicing?q.example:q.caged?q.caged.points:guitarVoicing(q.chord,q.activeStrings)).map(keyOf));
           } else if (mode === "intruder") {
             q.shown.delete(q.intruder);
             q.wrong.delete(q.intruder);
@@ -4309,6 +4434,10 @@
         $("#settings-open").addEventListener("click", () => {
           $("#volume-setting").value = prefs.volume;
           $("#size-setting").value = prefs.size;
+          $('#string-spacing-auto').checked=prefs.stringSpacing==='auto';
+          $('#string-spacing-setting').disabled=prefs.stringSpacing==='auto';
+          $('#string-spacing-setting').value=prefs.stringSpacing==='auto'?44:prefs.stringSpacing;
+          $('#string-spacing-value').textContent=prefs.stringSpacing==='auto'?'Padrão':prefs.stringSpacing+' px';
           $("#orientation-setting").value = prefs.orientation;
           $("#direction-setting").value = prefs.direction;
           $('#string-numbers-setting').checked=prefs.stringNumbers;
@@ -4342,8 +4471,17 @@
         $("#size-setting").addEventListener("change", (e) => {
           prefs.size = Number(e.target.value);
           document.documentElement.style.setProperty("--fret-width", prefs.size + "px");
-          save();
+          save();refreshBoardLayout();
         });
+        function applyStringSpacing() {
+          const root=document.documentElement,manual=prefs.stringSpacing!=='auto';
+          root.toggleAttribute('data-custom-string-spacing',manual);
+          root.style.setProperty('--string-spacing',(manual?prefs.stringSpacing:44)+'px');
+          $('#string-spacing-setting').disabled=!manual;
+          $('#string-spacing-value').textContent=manual?prefs.stringSpacing+' px':'Padrão';
+        }
+        $('#string-spacing-auto').addEventListener('change',e=>{prefs.stringSpacing=e.target.checked?'auto':Number($('#string-spacing-setting').value);applyStringSpacing();save();});
+        $('#string-spacing-setting').addEventListener('input',e=>{prefs.stringSpacing=Number(e.target.value);applyStringSpacing();save();});
         function refreshBoardLayout() {
           if (board && route !== "inicio" && (route === "livre" || q?.kind.startsWith("board"))) {
             if (route === "livre") renderFree();
@@ -4450,6 +4588,7 @@
         upgradePickers();
         soundUI();
         save();
+        applyStringSpacing();
         navigate(true);
       })();
     </script>
