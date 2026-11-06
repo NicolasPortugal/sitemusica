@@ -2088,6 +2088,26 @@
       .harmony-steps .done { color:var(--correct); }
       @media (min-width:851px) and (max-height:900px) {
       }
+
+      /* Larger mobile targets also apply in landscape and training focus. Manual spacing wins below. */
+      @media (max-width:850px), (max-height:500px) and (max-width:1000px) and (pointer:coarse) {
+        .string-row, .fret, body.practice-focus .string-row, body.practice-focus .fret { height:56px; }
+      }
+      .board-only-exit { display:none; }
+      .exercise-body > .free-board-only { margin-bottom:12px; }
+      body.board-only { overflow:hidden; }
+      body.board-only .sidebar, body.board-only .topbar, body.board-only .page-footer { display:none; }
+      body.board-only .free-card {
+        position:fixed; inset:0; z-index:100; margin:0; border:0; border-radius:0;
+        display:flex; flex-direction:column; justify-content:center;
+        padding:calc(56px + env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
+        background:var(--bg); overflow-y:auto;
+      }
+      body.board-only .free-card > .question-header, body.board-only .free-card > .action-row,
+      body.board-only .free-card .exercise-body > :not(#board-host), body.board-only .board-tools { display:none; }
+      body.board-only .free-card .exercise-body { display:block; padding:0; min-height:0; width:100%; }
+      body.board-only .board-scroll { margin:0; max-height:calc(100dvh - 76px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow-y:auto; }
+      body.board-only .board-only-exit { display:block; position:absolute; top:max(8px,env(safe-area-inset-top)); right:max(8px,env(safe-area-inset-right)); min-height:44px; }
       html[data-custom-string-spacing] .string-row, html[data-custom-string-spacing] .fret { height:var(--string-spacing) !important; }
       html[data-custom-string-spacing] .fret .marker { max-width:calc(var(--string-spacing) - 4px); max-height:calc(var(--string-spacing) - 4px); }
     </style>
@@ -2169,7 +2189,7 @@
       <p class="guide-intro">Escolha uma atividade abaixo para abrir o treino. Pelo menu, entre na área e use o seletor Exercício.</p>
       <div id="guide-content"></div>
       <div class="dialog-separator"></div>
-      <p class="guide-intro">Em Configurações, escolha a ordem das cordas, o sentido das casas e os rótulos do canto. Filtros personaliza notas, cordas e qualidades em cada exercício. No celular, use Focar região ou Tela de treino para concentrar o braço na tela. No Tocar livre, ative Manter marcações para desenhar várias notas na mesma corda; no computador, remova com o botão direito; no celular, toque novamente.</p>
+      <p class="guide-intro">Em Configurações, escolha a ordem das cordas, o sentido das casas e os rótulos do canto. Filtros personaliza notas, cordas e qualidades em cada exercício. No celular, use Focar região ou Tela de treino para concentrar o braço na tela. No Tocar livre, ative Manter marcações para desenhar várias notas na mesma corda; no computador, segure o botão direito e arraste para remover; no celular, toque novamente.</p>
     </dialog>
     <dialog id="settings-dialog" aria-labelledby="settings-title">
       <div class="dialog-top">
@@ -2192,7 +2212,7 @@
             <option value="76">Confortável</option>
             <option value="92">Grande</option>
           </select></label
-        ><label class="switch-row"><span>Espaçamento padrão<small>Manter a distância original entre as cordas.</small></span><input id="string-spacing-auto" type="checkbox" checked></label>
+        ><label class="switch-row"><span>Espaçamento padrão<small>Usar mais espaço no celular e a distância padrão no computador.</small></span><input id="string-spacing-auto" type="checkbox" checked></label>
         <label class="field">Espaçamento entre cordas <output id="string-spacing-value">Padrão</output><input id="string-spacing-setting" type="range" min="26" max="72" step="1" value="44" disabled></label>
         <label class="field"
           >Orientação do braço<select id="orientation-setting">
@@ -2209,7 +2229,7 @@
         <label class="switch-row"><span>Nota de cada corda<small>Mostrar E, A, D, G, B, e no canto do braço.</small></span><input type="checkbox" id="string-notes-setting" checked></label>
         <label class="field">Visualização do braço<select id="board-view-setting"><option value="auto">Automática · foco no celular</option><option value="focus">Focar a região</option><option value="full">Braço completo</option></select></label>
         <p>
-          O tamanho escolhido vale nos braços completos. No celular, o foco mostra poucas casas por vez, com alvos de toque de pelo menos 48 px de largura. Use as setas da região ou Braço completo para explorar.
+          A largura escolhida vale também no celular e no foco. Deslize o braço para ver as casas que não couberem na tela. Use as setas da região ou Braço completo para explorar.
         </p>
         <div class="sound-status" id="audio-status" role="status">
           Guitarra limpa · pronta para tocar.
@@ -2837,7 +2857,7 @@
         const defaults = {
           sound: true,
           volume: 60,
-          size: 76,
+          size: matchMedia('(max-width: 850px)').matches ? 92 : 76,
           orientation: "tab",
           direction: "ltr",
           stringNumbers: true,
@@ -2872,7 +2892,7 @@
                 ...defaults,
                 sound: typeof p.sound === "boolean" ? p.sound : defaults.sound,
                 volume: Number.isFinite(p.volume) ? Math.max(0, Math.min(100, p.volume)) : 60,
-                size: [64, 76, 92].includes(p.size) ? p.size : 76,
+                size: [64, 76, 92].includes(p.size) ? p.size : defaults.size,
                 orientation: p.orientation === "bass" ? "bass" : "tab",
                 direction: p.direction === "rtl" ? "rtl" : "ltr",
                 stringNumbers: p.stringNumbers !== false,
@@ -3169,8 +3189,8 @@
             if(this.reversed)frets.reverse();
             const labels=prefs.stringNumbers || prefs.stringNotes;
             this.labelWidth=labels?(this.mobile?36:48):0;
-            const available=this.host.clientWidth || window.innerWidth-48;
-            this.width=this.focused && this.mobile?Math.max(48,Math.min(prefs.size,Math.floor((available-this.labelWidth)/frets.length))):prefs.size;
+            // Keep the chosen touch target size; scroll instead of squeezing the frets.
+            this.width=prefs.size;
             this.host.style.setProperty('--board-fret-width',this.width+'px');
             this.host.style.setProperty('--string-label-width',this.labelWidth+'px');
             this.host.innerHTML=`<div class="board-tools"><div class="board-pages"><button type="button" class="quiet-btn board-prev" aria-label="Ver casas anteriores" ${this.focused && this.start>0?'':'disabled'}>${icon('undo')}</button><span class="board-range">Casas ${this.start}–${this.end}</span><button type="button" class="quiet-btn board-next" aria-label="Ver próximas casas" ${this.focused && this.end<this.last?'':'disabled'}>${icon('arrow')}</button></div><div class="board-actions"><button type="button" class="quiet-btn board-view" aria-pressed="${this.focused}">${this.focused?'Braço completo':'Focar região'}</button><button type="button" class="quiet-btn screen-focus">${document.body.classList.contains('practice-focus')?'Sair do foco':'Tela de treino'}</button></div></div><div class="board-scroll${this.focused?' focus-board':''}" tabindex="-1" aria-label="Braço da guitarra; deslize para ver outras casas"><div class="fretboard${this.reversed?' reversed':''}${labels?'':' without-labels'}"><div class="fret-ruler" aria-hidden="true"><span class="ruler-label"></span>${frets.map(f=>`<span class="fret-number ${[3,5,7,9,12,15,17,19,21,24].includes(f)?'inlay':''}">${f===0?'0 · solta':f}</span>`).join('')}</div>${this.rows.map((s,row)=>`<div class="string-row ${this.activeStrings.includes(s)?'':'inactive-string'}" style="--string-thickness:${(1+(5-s)/2).toFixed(1)}px"><span class="string-name" aria-hidden="true">${prefs.stringNumbers?`<small>${6-s}ª</small>`:''}${prefs.stringNotes?['E','A','D','G','B','e'][s]:''}</span>${frets.map(f=>`<button type="button" class="fret ${f===0?'open':''}" data-string="${s}" data-fret="${f}" tabindex="${row===this.rows.findIndex(v=>this.activeStrings.includes(v)) && f===this.start?'0':'-1'}" ${this.activeStrings.includes(s)?'':'disabled'} aria-label="${6-s}ª corda, ${f===0?'solta':'casa '+f}"><span class="marker"></span>${([3,5,7,9,15,17,19,21].includes(f) && row===2)||([12,24].includes(f)&&(row===1||row===3))?'<span class="inlay-dot"></span>':''}</button>`).join('')}</div>`).join('')}</div></div>`;
@@ -3180,6 +3200,10 @@
               this.cells.set(Theory.position(s,f),cell);
               cell.addEventListener('click',e=>{this.focusCell(cell,false);this.onPick(s,f,e);});
               cell.addEventListener('contextmenu',e=>{if(this.onRemove){e.preventDefault();this.onRemove(s,f);}});
+              // Use the current buttons bitmask so releasing outside the board cannot leave erasing stuck on.
+              const erase=e=>{if(this.onRemove && e.pointerType==='mouse' && (e.buttons & 2)){e.preventDefault();this.onRemove(s,f);}};
+              cell.addEventListener('pointerdown',erase);
+              cell.addEventListener('pointerenter',erase);
               cell.addEventListener('keydown',e=>{
                 const rows=this.rows.filter(v=>this.activeStrings.includes(v)),row=rows.indexOf(s);
                 let ns=s,nf=f;
@@ -3765,7 +3789,7 @@
                     )
                     .join("")}</select></label></div>`
                 : ""
-            }${mode === "progression" ? `<div class="inline-controls"><label>Progressão <select id="pattern-choice"><option value="random">Aleatória</option>${progressionSets[prefs.mode].map((p, i) => `<option value="${i}" ${String(i) === patternChoice ? "selected" : ""}>${p.map((d) => q.field[d].roman).join(" – ")}</option>`).join("")}</select></label></div><div id="sequence" class="sequence" aria-label="Acordes da progressão"></div>` : ""}${q.kind.startsWith("board") ? `<div id="board-host"></div><div class="board-caption"><span>${prefs.orientation === "tab" ? "1ª corda (aguda) em cima · 6ª (grave) embaixo" : "6ª corda (grave) em cima · 1ª (aguda) embaixo"}</span><span>Casas com largura fixa · deslize para explorar</span></div><div class="legend"><span><i class="root"></i> ${mode === "identify" ? "Posição a identificar" : "Tônica / seleção"}</span><span><i class="hollow"></i> ${route === "escalas" || mode === "target" ? "Posições do shape" : "Uma nota por casa"}</span></div>` : ""}${q.kind === "intervals" ? `<div class="interval-grid">${q.intervals.map((v, i) => `<label class="field">${v.label}<select class="interval-answer" data-index="${i}"><option value="">Selecione</option>${q.options.map((o) => `<option value="${o.id}">${o.label}</option>`).join("")}</select></label>`).join("")}</div>` : ""}${q.options.length && q.kind !== "intervals" ? '<div id="options" class="options"></div>' : ""}${["boardMulti", "multi"].includes(q.kind) ? '<div id="selection-summary" class="selection-line"></div>' : ""}<div id="feedback" class="feedback" role="status" aria-live="polite"></div><div id="solution"></div></div><div class="action-row"><div class="action-cluster">${multi ? `<button class="btn primary" id="check-answer" type="button">${icon("check")}Verificar</button>` : ""}${q.kind === "sequence" ? `<button class="btn" id="undo-answer" type="button">${icon("undo")}Desfazer</button>` : ""}${q.chord || q.audioNote || q.kind === "sequence" ? `<button class="btn" id="listen-answer" type="button">${icon("sound")}${q.kind === "sequence" ? "Ouvir sequência" : q.audioNote ? "Ouvir nota" : "Ouvir acorde"}</button>` : ""}<button class="btn ${multi ? "" : "primary"}" id="next-question" type="button" >${q.steps&&q.step<q.steps.length-1?'Próximo acorde':'Próximo'} ${icon("arrow")}<span class="shortcut">N</span></button></div><div class="action-cluster"><button class="btn text" id="hint-button" type="button">Dica</button><button class="btn text" id="reveal-button" type="button">Ver resposta</button></div></div></section><details class="lesson-note"><summary>Como aproveitar este treino</summary><p>${lessonText()}</p></details>`;
+            }${mode === "progression" ? `<div class="inline-controls"><label>Progressão <select id="pattern-choice"><option value="random">Aleatória</option>${progressionSets[prefs.mode].map((p, i) => `<option value="${i}" ${String(i) === patternChoice ? "selected" : ""}>${p.map((d) => q.field[d].roman).join(" – ")}</option>`).join("")}</select></label></div><div id="sequence" class="sequence" aria-label="Acordes da progressão"></div>` : ""}${q.kind.startsWith("board") ? `<button type="button" class="btn free-board-only" aria-pressed="${document.body.classList.contains('board-only')}">Só braço</button><div id="board-host"></div><div class="board-caption"><span>${prefs.orientation === "tab" ? "1ª corda (aguda) em cima · 6ª (grave) embaixo" : "6ª corda (grave) em cima · 1ª (aguda) embaixo"}</span><span>Casas com largura fixa · deslize para explorar</span></div><div class="legend"><span><i class="root"></i> ${mode === "identify" ? "Posição a identificar" : "Tônica / seleção"}</span><span><i class="hollow"></i> ${route === "escalas" || mode === "target" ? "Posições do shape" : "Uma nota por casa"}</span></div>` : ""}${q.kind === "intervals" ? `<div class="interval-grid">${q.intervals.map((v, i) => `<label class="field">${v.label}<select class="interval-answer" data-index="${i}"><option value="">Selecione</option>${q.options.map((o) => `<option value="${o.id}">${o.label}</option>`).join("")}</select></label>`).join("")}</div>` : ""}${q.options.length && q.kind !== "intervals" ? '<div id="options" class="options"></div>' : ""}${["boardMulti", "multi"].includes(q.kind) ? '<div id="selection-summary" class="selection-line"></div>' : ""}<div id="feedback" class="feedback" role="status" aria-live="polite"></div><div id="solution"></div></div><div class="action-row"><div class="action-cluster">${multi ? `<button class="btn primary" id="check-answer" type="button">${icon("check")}Verificar</button>` : ""}${q.kind === "sequence" ? `<button class="btn" id="undo-answer" type="button">${icon("undo")}Desfazer</button>` : ""}${q.chord || q.audioNote || q.kind === "sequence" ? `<button class="btn" id="listen-answer" type="button">${icon("sound")}${q.kind === "sequence" ? "Ouvir sequência" : q.audioNote ? "Ouvir nota" : "Ouvir acorde"}</button>` : ""}<button class="btn ${multi ? "" : "primary"}" id="next-question" type="button" >${q.steps&&q.step<q.steps.length-1?'Próximo acorde':'Próximo'} ${icon("arrow")}<span class="shortcut">N</span></button></div><div class="action-cluster"><button class="btn text" id="hint-button" type="button">Dica</button><button class="btn text" id="reveal-button" type="button">Ver resposta</button></div></div></section><details class="lesson-note"><summary>Como aproveitar este treino</summary><p>${lessonText()}</p></details>`;
           bindExerciseControls();
           if (q.kind.startsWith("board")) {
             board = new Fretboard($("#board-host"), {
@@ -4335,13 +4359,33 @@
           for(const id of ['free-strum','free-arpeggio','free-clear'])$('#'+id).disabled=!coords.length;
         }
         function renderFree() {
+          // Read the existing viewport before replacing the controls and board.
+          let previous=document.querySelector('.free-card #board-host')===board?.host ? {
+            left:board.scroll.scrollLeft, top:board.scroll.scrollTop, width:board.width,
+            focused:board.focused, start:board.start, end:board.end, only:board.only,
+          } : null;
+          const only=document.body.classList.contains('board-only');
+          if(only && previous && !previous.only)free.normalViewport=previous;
+          else if(!only && previous?.only && free.normalViewport)previous=free.normalViewport;
           clearTimeout(autoNextTimer);q=null;audio.stop();
           const shape=free.overlay!=='none'&&free.shape!=='all'?Theory.shape(freeRoot(),free.type,Number(free.shape)):null;
           free.shapePoints=new Set(shape?shape.points.map(keyOf):[]);
           if(shape)free.range=Math.max(free.range,shape.max>12?24:12);
-          $('#page').innerHTML=pageHeading(config.livre.title,config.livre.subtitle)+`<div class="toolbar"><label class="field wide">Guia visual<select id="free-overlay"><option value="none" ${free.overlay==='none'?'selected':''}>Braço livre</option>${['major','pentaMajor','pentaMinor'].map(t=>`<option value="${t}" ${free.overlay===t?'selected':''}>${scaleName(t).replace(/^./,c=>c.toUpperCase())}</option>`).join('')}</select></label><label class="field">Tônica<select id="free-root"><option value="none" ${!free.context?'selected':''}>Sem tonalidade</option>${rootOptions(free.context?free.root:'none',free.type==='pentaMinor'?'minor':'major',false)}</select></label><label class="field">Acidentes<select id="free-accidentals">${[['auto','Automático'],['sharps','♯ Sustenidos'],['flats','♭ Bemóis']].map(([v,n])=>`<option value="${v}" ${prefs.freeAccidentals===v?'selected':''}>${n}</option>`).join('')}</select></label><label class="field">Marcadores<select id="free-labels">${[['notes','Notas'],['degrees','Graus'],['none','Sem nomes']].map(([v,n])=>`<option value="${v}" ${free.labels===v?'selected':''}>${n}</option>`).join('')}</select></label>${free.overlay!=='none'?`<label class="field">${free.type==='pentaMinor'?'Box':'Shape'}<select id="free-shape"><option value="all" ${free.shape==='all'?'selected':''}>Braço inteiro</option>${Theory.cagedNames.map((n,i)=>`<option value="${i+1}" ${free.shape===i+1?'selected':''}>${i+1}${free.type==='pentaMinor'?'':' · '+n}</option>`).join('')}</select></label>`:''}<label class="field">Casas<select id="free-range"><option value="12" ${free.range===12?'selected':''}>12</option><option value="24" ${free.range===24?'selected':''}>24</option></select></label></div><section class="exercise-card free-card"><div class="question-header"><div><h2>${shape?shape.label+' de '+freeRoot():'Braço da guitarra'}</h2><p>${free.context?`${freeRoot()} · ${free.type==='pentaMinor'?'menor natural':'maior'}${prefs.freeAccidentals==='auto'?' · grafia do tom':' · exibição '+(prefs.freeAccidentals==='sharps'?'em sustenidos':'em bemóis')}`:'Sem tonalidade · sustenidos no modo automático'}</p></div></div><div class="exercise-body"><div class="inline-controls free-toggles"><label class="toggle-control"><input id="free-show-all" type="checkbox" ${free.showAll?'checked':''}> Mostrar todas</label><label class="toggle-control"><input id="free-keep-marks" type="checkbox" ${prefs.keepMarks?'checked':''}> Manter marcações</label></div><div id="board-host"></div><div class="board-caption"><span>${prefs.orientation==='tab'?'1ª aguda em cima':'6ª grave em cima'}</span><span>${prefs.direction==='rtl'?'Casas da direita para a esquerda':'Casas da esquerda para a direita'}</span></div><p class="marking-help" id="free-marking-help">${prefs.keepMarks?'No celular, toque novamente para apagar. No computador, o clique mantém a marca; o botão direito apaga.':'Toque de novo na posição para apagar.'}</p><div class="selection-line" id="free-selection"></div><div class="feedback" id="free-chord-info" role="status" aria-live="polite"></div></div><div class="action-row"><div class="action-cluster"><button type="button" class="btn primary" id="free-strum">${icon('sound')}${prefs.keepMarks?'Ouvir marcas':'Ouvir acorde'}</button><button type="button" class="btn" id="free-arpeggio">${icon('play')}Arpejar</button><button type="button" class="btn" id="free-stop">${icon('stop')}Parar</button></div><button class="btn text" type="button" id="free-clear">Limpar</button></div></section><details class="guitar-practice"><summary>Com a guitarra · metrônomo e prática</summary><div class="practice-content"><p>Escolha um guia e um shape acima para acompanhar no instrumento. Comece devagar e diga os graus enquanto toca.</p><div class="metro-controls"><label class="field">BPM<input id="metro-bpm" type="number" min="40" max="240" value="${prefs.metroBpm}" inputmode="numeric"></label><button type="button" class="btn primary" id="metro-start">${icon('play')}Iniciar</button><button type="button" class="btn" id="metro-tap">Marcar tempo</button><div id="metro-beats" aria-label="Compasso de quatro tempos">${[0,1,2,3].map(i=>`<span data-beat="${i}">${i+1}</span>`).join('')}</div></div><ol class="practice-steps"><li>Toque o desenho subindo e descendo, uma nota por pulso.</li><li>Use o marcador Graus e toque só 1–3–5, depois 2–4–6.</li><li>Mude para a região vizinha e mantenha a mesma tônica.</li></ol><p class="guide-intro">O primeiro pulso é acentuado. Os desenhos são um mapa de estudo; escolha uma digitação confortável no instrumento.</p></div></details>`;
+          $('#page').innerHTML=pageHeading(config.livre.title,config.livre.subtitle)+`<div class="toolbar"><label class="field wide">Guia visual<select id="free-overlay"><option value="none" ${free.overlay==='none'?'selected':''}>Braço livre</option>${['major','pentaMajor','pentaMinor'].map(t=>`<option value="${t}" ${free.overlay===t?'selected':''}>${scaleName(t).replace(/^./,c=>c.toUpperCase())}</option>`).join('')}</select></label><label class="field">Tônica<select id="free-root"><option value="none" ${!free.context?'selected':''}>Sem tonalidade</option>${rootOptions(free.context?free.root:'none',free.type==='pentaMinor'?'minor':'major',false)}</select></label><label class="field">Acidentes<select id="free-accidentals">${[['auto','Automático'],['sharps','♯ Sustenidos'],['flats','♭ Bemóis']].map(([v,n])=>`<option value="${v}" ${prefs.freeAccidentals===v?'selected':''}>${n}</option>`).join('')}</select></label><label class="field">Marcadores<select id="free-labels">${[['notes','Notas'],['degrees','Graus'],['none','Sem nomes']].map(([v,n])=>`<option value="${v}" ${free.labels===v?'selected':''}>${n}</option>`).join('')}</select></label>${free.overlay!=='none'?`<label class="field">${free.type==='pentaMinor'?'Box':'Shape'}<select id="free-shape"><option value="all" ${free.shape==='all'?'selected':''}>Braço inteiro</option>${Theory.cagedNames.map((n,i)=>`<option value="${i+1}" ${free.shape===i+1?'selected':''}>${i+1}${free.type==='pentaMinor'?'':' · '+n}</option>`).join('')}</select></label>`:''}<label class="field">Casas<select id="free-range"><option value="12" ${free.range===12?'selected':''}>12</option><option value="24" ${free.range===24?'selected':''}>24</option></select></label></div><section class="exercise-card free-card"><button type="button" class="btn board-only-exit free-board-only" aria-label="Sair do modo só braço">✕ Voltar</button><div class="question-header"><div><h2>${shape?shape.label+' de '+freeRoot():'Braço da guitarra'}</h2><p>${free.context?`${freeRoot()} · ${free.type==='pentaMinor'?'menor natural':'maior'}${prefs.freeAccidentals==='auto'?' · grafia do tom':' · exibição '+(prefs.freeAccidentals==='sharps'?'em sustenidos':'em bemóis')}`:'Sem tonalidade · sustenidos no modo automático'}</p></div></div><div class="exercise-body"><div class="inline-controls free-toggles"><label class="toggle-control"><input id="free-show-all" type="checkbox" ${free.showAll?'checked':''}> Mostrar todas</label><label class="toggle-control"><input id="free-keep-marks" type="checkbox" ${prefs.keepMarks?'checked':''}> Manter marcações</label></div><button type="button" class="btn free-board-only" aria-pressed="${document.body.classList.contains('board-only')}">Só braço</button><div id="board-host"></div><div class="board-caption"><span>${prefs.orientation==='tab'?'1ª aguda em cima':'6ª grave em cima'}</span><span>${prefs.direction==='rtl'?'Casas da direita para a esquerda':'Casas da esquerda para a direita'}</span></div><p class="marking-help" id="free-marking-help">${prefs.keepMarks?'No celular, toque novamente para apagar. No computador, o clique mantém a marca; segure o botão direito e arraste para apagar várias marcas.':'Toque de novo na posição para apagar.'}</p><div class="selection-line" id="free-selection"></div><div class="feedback" id="free-chord-info" role="status" aria-live="polite"></div></div><div class="action-row"><div class="action-cluster"><button type="button" class="btn primary" id="free-strum">${icon('sound')}${prefs.keepMarks?'Ouvir marcas':'Ouvir acorde'}</button><button type="button" class="btn" id="free-arpeggio">${icon('play')}Arpejar</button><button type="button" class="btn" id="free-stop">${icon('stop')}Parar</button></div><button class="btn text" type="button" id="free-clear">Limpar</button></div></section><details class="guitar-practice"><summary>Com a guitarra · metrônomo e prática</summary><div class="practice-content"><p>Escolha um guia e um shape acima para acompanhar no instrumento. Comece devagar e diga os graus enquanto toca.</p><div class="metro-controls"><label class="field">BPM<input id="metro-bpm" type="number" min="40" max="240" value="${prefs.metroBpm}" inputmode="numeric"></label><button type="button" class="btn primary" id="metro-start">${icon('play')}Iniciar</button><button type="button" class="btn" id="metro-tap">Marcar tempo</button><div id="metro-beats" aria-label="Compasso de quatro tempos">${[0,1,2,3].map(i=>`<span data-beat="${i}">${i+1}</span>`).join('')}</div></div><ol class="practice-steps"><li>Toque o desenho subindo e descendo, uma nota por pulso.</li><li>Use o marcador Graus e toque só 1–3–5, depois 2–4–6.</li><li>Mude para a região vizinha e mantenha a mesma tônica.</li></ol><p class="guide-intro">O primeiro pulso é acentuado. Os desenhos são um mapa de estudo; escolha uma digitação confortável no instrumento.</p></div></details>`;
           board=new Fretboard($('#board-host'),{last:free.range,region:shape?[shape.min,shape.max]:null,describe:freeMarker,onPick:freePick,onRemove:(s,f)=>{free.selected.delete(Theory.position(s,f));board.update();freeSummary();}});
-          if(shape)board.showRegion(shape.min,shape.max);
+          board.only=only;
+          if(only){board.focused=false;board.start=0;board.end=board.last;board.render();}
+          else if(shape)board.showRegion(shape.min,shape.max);
+          if(previous){
+            if(previous.focused && board.focused){
+              const count=Math.min(previous.end-previous.start+1,board.last+1);
+              board.start=Math.max(0,Math.min(previous.start,board.last-count+1));
+              board.end=board.start+count-1;board.render();
+            }
+            const offset=only && previous.focused?(board.reversed?board.last-previous.end:previous.start)*board.width:0;
+            board.scroll.scrollLeft=previous.left*board.width/previous.width+offset;
+            board.scroll.scrollTop=previous.top;
+          }
           freeSummary();
           $('#free-overlay').addEventListener('change',e=>{free.overlay=e.target.value;if(free.overlay!=='none'){free.type=free.overlay;free.context=true;}free.shape='all';renderFree();});
           $('#free-root').addEventListener('change',e=>{free.context=e.target.value!=='none';if(free.context)free.root=Number(e.target.value);else {free.overlay='none';free.shape='all';}renderFree();});
@@ -4349,7 +4393,7 @@
           $('#free-labels').addEventListener('change',e=>{free.labels=e.target.value;board.update();if(free.labels==='degrees'&&!free.context)toast('Escolha uma tônica para mostrar os graus.');});
           $('#free-shape')?.addEventListener('change',e=>{free.shape=e.target.value==='all'?'all':Number(e.target.value);renderFree();});
           $('#free-range').addEventListener('change',e=>{free.range=Number(e.target.value);if(shape&&shape.max>free.range)free.shape='all';renderFree();});
-          $('#free-keep-marks').addEventListener('change',e=>{prefs.keepMarks=e.target.checked;save();freeSummary();$('#free-marking-help').textContent=prefs.keepMarks?'No celular, toque novamente para apagar. No computador, o clique mantém a marca; o botão direito apaga.':'Toque de novo na posição para apagar.';$('#free-strum').innerHTML=icon('sound')+(prefs.keepMarks?'Ouvir marcas':'Ouvir acorde');});
+          $('#free-keep-marks').addEventListener('change',e=>{prefs.keepMarks=e.target.checked;save();freeSummary();$('#free-marking-help').textContent=prefs.keepMarks?'No celular, toque novamente para apagar. No computador, o clique mantém a marca; segure o botão direito e arraste para apagar várias marcas.':'Toque de novo na posição para apagar.';$('#free-strum').innerHTML=icon('sound')+(prefs.keepMarks?'Ouvir marcas':'Ouvir acorde');});
           $('#free-show-all').addEventListener('change',e=>{free.showAll=e.target.checked;board.update();});
           $('#free-clear').addEventListener('click',()=>{free.selected.clear();audio.stop();board.update();freeSummary();});
           $('#free-stop').addEventListener('click',()=>audio.stop());
@@ -4400,7 +4444,7 @@
         /* 12. Navigation, persistence and global controls. No inline handlers. */
         function navigate(initial = false) {
           clearTimeout(autoNextTimer);
-          document.body.classList.remove('practice-focus');
+          document.body.classList.remove('practice-focus','board-only');
           audio.stop();
           let [next, exercise] = (location.hash.slice(1) || "inicio").split("/");
           if (!Object.hasOwn(config, next)) next = "inicio";
@@ -4452,7 +4496,7 @@
           $("#size-setting").value = prefs.size;
           $('#string-spacing-auto').checked=prefs.stringSpacing==='auto';
           $('#string-spacing-setting').disabled=prefs.stringSpacing==='auto';
-          $('#string-spacing-setting').value=prefs.stringSpacing==='auto'?44:prefs.stringSpacing;
+          $('#string-spacing-setting').value=prefs.stringSpacing==='auto'?(matchMedia('(max-width:850px)').matches?56:44):prefs.stringSpacing;
           $('#string-spacing-value').textContent=prefs.stringSpacing==='auto'?'Padrão':prefs.stringSpacing+' px';
           $("#orientation-setting").value = prefs.orientation;
           $("#direction-setting").value = prefs.direction;
@@ -4541,6 +4585,7 @@
         $('#picker-search').addEventListener('input',drawPicker);
         $('#picker-dialog').addEventListener('close',()=>{if(pickerButton?.isConnected)pickerButton.focus({preventScroll:true});});
         $('#picker-dialog').addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp'].includes(e.key)){const list=$$('#picker-options button:not(:disabled)'),i=list.indexOf(document.activeElement),next=e.key==='ArrowDown'?Math.min(list.length-1,i+1):Math.max(0,i-1);list[next]?.focus();e.preventDefault();}});
+        document.addEventListener('click',e=>{if(e.target.closest('.free-board-only')){document.body.classList.toggle('board-only');renderFree();$(document.body.classList.contains('board-only')?'.board-only-exit':'.exercise-body .free-board-only')?.focus({preventScroll:true});}});
         document.addEventListener('click',e=>{if(e.target.closest('.screen-focus')){document.body.classList.toggle('practice-focus');window.scrollTo({top:0,behavior:'instant'});board?.render();if(board?.region)board.showRegion(...board.region);$('.screen-focus')?.focus({preventScroll:true});}});
         let boardViewportWidth=innerWidth;
         window.addEventListener('resize',()=>{if(innerWidth===boardViewportWidth)return;boardViewportWidth=innerWidth;if(board&&$('#board-host')){const active=document.activeElement;refreshBoardLayout();if(active?.dataset?.string){const cell=board.cells.get(Theory.position(Number(active.dataset.string),Number(active.dataset.fret)));if(cell)board.focusCell(cell,true);}}});
@@ -4572,6 +4617,7 @@
             $("dialog[open]")
           )
             return;
+          if(e.key==='Escape'&&document.body.classList.contains('board-only')){document.body.classList.remove('board-only');renderFree();$('.exercise-body .free-board-only')?.focus({preventScroll:true});return;}
           if(e.key==='Escape'&&document.body.classList.contains('practice-focus')){document.body.classList.remove('practice-focus');$$('.screen-focus').forEach(b=>b.textContent='Tela de treino');}
           if (e.key.toLowerCase() === "n" && q) {
             e.preventDefault();
